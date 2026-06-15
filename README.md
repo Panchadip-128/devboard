@@ -4,6 +4,18 @@ DevBoard is an advanced engineering telemetry and intelligence platform designed
 
 ## System Architecture
 
+```mermaid
+graph TD
+    A[GitHub Webhooks] -->|POST Payload| B(Next.js API Receiver)
+    B -->|Enqueue Event| C[(pg-boss Queue)]
+    C -->|SKIP LOCKED| D[Background Worker]
+    D -->|Normalize & Store| E[(PostgreSQL Database)]
+    E -->|Query Data| F[Analytical Engine]
+    F -->|Aggregations| G[LRU Cache Layer]
+    G -->|Fast Metrics| H(SSE Streaming Route)
+    H -->|Live Push| I[Next.js Dashboard UI]
+```
+
 Our platform is built to handle high-concurrency webhook streams without dropping events, utilizing an exactly-once delivery system.
 
 - **Event Ingestion Pipeline:** We process concurrent GitHub webhook streams using `pg-boss`, which relies on PostgreSQL's advanced `SKIP LOCKED` row-level concurrency. This allows multiple worker instances to lock and process database rows safely without race conditions.
