@@ -1,19 +1,23 @@
 # DevBoard: Engineering Team Intelligence Platform
 
-DevBoard is an advanced engineering telemetry and intelligence platform designed to ingest raw development lifecycle events and transform them into actionable insights. By leveraging an event-driven architecture, DevBoard computes complex DORA metrics, maps pull request bottlenecks, and predicts team health in real-time.
+DevBoard is an advanced engineering telemetry and intelligence platform designed to ingest raw development lifecycle events and transform them into actionable insights. By leveraging an event-driven architecture, DevBoard computes complex DORA metrics, maps pull request bottlenecks, detects statistical anomalies, and predicts team health in real-time.
 
 ## System Architecture
 
 ```mermaid
 graph TD
     A[GitHub Webhooks] -->|POST Payload| B(Next.js API Receiver)
-    B -->|Enqueue Event| C[(pg-boss Queue)]
-    C -->|SKIP LOCKED| D[Background Worker]
-    D -->|Normalize & Store| E[(PostgreSQL Database)]
-    E -->|Query Data| F[Analytical Engine]
-    F -->|Aggregations| G[LRU Cache Layer]
-    G -->|Fast Metrics| H(SSE Streaming Route)
-    H -->|Live Push| I[Next.js Dashboard UI]
+    B -->|HMAC SHA-256 Verify| C{Valid Signature?}
+    C -->|Yes| D[(pg-boss Queue)]
+    C -->|No| E[401 Unauthorized]
+    D -->|SKIP LOCKED| F[Background Worker]
+    F -->|Normalize & Store| G[(PostgreSQL Database)]
+    G -->|Query Data| H[Analytical Engine]
+    H -->|Aggregations| I[LRU Cache Layer]
+    I -->|Fast Metrics| J(SSE Streaming Route)
+    J -->|Live Push| K[Next.js Dashboard UI]
+    H -->|Time Series| L[Anomaly Detection]
+    L -->|Z-Score Alerts| K
 ```
 
 Our platform is built to handle high-concurrency webhook streams without dropping events, utilizing an exactly-once delivery system.
@@ -22,21 +26,59 @@ Our platform is built to handle high-concurrency webhook streams without droppin
 - **Data Normalization:** A background worker normalizes complex JSON webhook payloads into strict relational data models for Pull Requests, Commits, Deployments, and Incidents.
 - **Push-Based Telemetry:** We utilize Server-Sent Events (SSE) to push live metric updates to the browser. This unidirectional stream avoids the heavy handshake overhead of WebSockets while ensuring sub-second latency from backend calculation to dashboard rendering.
 
+## Core Features
+
+### DORA Metrics Engine
+The core engine natively calculates Deployment Frequency, Lead Time for Changes, and Mean Time To Recovery (MTTR). These metrics are cross-referenced with active bug densities to generate a composite executive-level Team Health Score graded from A+ to C.
+
+### Incident Management with Postmortem Workflow
+A dedicated incident management system with chronological timeline views tracking each status change (investigating, identified, monitoring, resolved). Each incident supports structured postmortems with root cause categories, action items, and affected service tagging.
+
+### Team Leaderboard and Contribution Analytics
+A comparative analytics engine that ranks team members by contribution patterns. Calculates per-developer commit volume, PR merge rates, review responsiveness scores, and workload distribution percentages to identify load imbalances.
+
+### Statistical Anomaly Detection Engine
+A sliding window Z-score algorithm operating over historical DORA metric time series. When a metric deviates more than 2 standard deviations from its 30-day rolling mean, the system flags an anomaly as either a spike or drop with warning or critical severity levels.
+
 ## Advanced SDE Features
 
-Our core analytics engine implements several advanced algorithms and system design patterns to ensure scalability and deep intelligence.
-
 ### 1. Algorithmic PR Dependency Graph
-Developers frequently encounter "dependency hell" where review chains become blocked. We implemented a Directed Acyclic Graph (DAG) algorithm utilizing Depth First Search (DFS) to detect circular pull request dependencies. Furthermore, we use dynamic programming to calculate the "Critical Path"—the longest sequential chain of wait times currently blocking a deployment.
+We implemented a Directed Acyclic Graph (DAG) algorithm utilizing Depth First Search (DFS) to detect circular pull request dependencies. Furthermore, we use dynamic programming to calculate the "Critical Path"—the longest sequential chain of wait times currently blocking a deployment.
 
 ### 2. LRU Aggregation Caching Layer
-Calculating aggregate DORA metrics across tens of thousands of commits is computationally expensive. To protect the database during traffic spikes, we developed an in-memory Least Recently Used (LRU) Cache layer. This cache employs a Time-To-Live (TTL) eviction strategy to serve highly complex analytical queries in constant time.
+To protect the database during traffic spikes, we developed an in-memory Least Recently Used (LRU) Cache layer. This cache employs a Time-To-Live (TTL) eviction strategy to serve highly complex analytical queries in constant time.
 
 ### 3. Predictive Burnout Analysis Heuristics
-Engineering management requires foresight into team health. We developed a predictive heuristic algorithm that parses the raw timestamp metadata of commit histories. By calculating ratios of excessive weekend work and late-night coding (10 PM to 4 AM), the system programmatically assigns a "Burnout Risk Level" to individual engineers, enabling proactive team management.
+We developed a predictive heuristic algorithm that parses the raw timestamp metadata of commit histories. By calculating ratios of excessive weekend work and late-night coding (10 PM to 4 AM), the system programmatically assigns a "Burnout Risk Level" to individual engineers.
 
-### 4. DORA Metrics Engine
-The core engine natively calculates Deployment Frequency, Lead Time for Changes, and Mean Time To Recovery (MTTR). These metrics are cross-referenced with active bug densities to generate a composite executive-level Team Health Score.
+## REST API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/teams` | GET | List all teams with member and repository counts |
+| `/api/teams` | POST | Create a new team with Zod input validation |
+| `/api/teams/:teamId/metrics` | GET | Aggregated DORA, health, burnout metrics for a team |
+| `/api/repositories/:repoId/analytics` | GET | DORA metrics, PR bottlenecks, and health for a repository |
+| `/api/alerts` | GET | Active anomaly alerts across all metric time series |
+| `/api/webhooks/github` | POST | GitHub webhook receiver with HMAC signature verification |
+| `/api/stream` | GET | Server-Sent Events stream for real-time dashboard updates |
+
+## Data Model
+
+```mermaid
+erDiagram
+    Team ||--o{ TeamMember : has
+    Team ||--o{ Repository : owns
+    Team ||--o{ Sprint : runs
+    User ||--o{ TeamMember : belongs_to
+    Repository ||--o{ PullRequest : contains
+    Repository ||--o{ Commit : contains
+    Repository ||--o{ Deployment : contains
+    Repository ||--o{ Incident : contains
+    Repository ||--o{ Issue : contains
+    Sprint ||--o{ Issue : includes
+    Incident ||--o{ IncidentUpdate : has_timeline
+```
 
 ## Technology Stack
 
@@ -45,7 +87,8 @@ The core engine natively calculates Deployment Frequency, Lead Time for Changes,
 - **Database:** PostgreSQL
 - **ORM:** Prisma
 - **Queue:** pg-boss (PostgreSQL-native job queue)
-- **UI & Visualization:** TailwindCSS, Tremor, shadcn/ui
+- **UI and Visualization:** TailwindCSS, Tremor, shadcn/ui
+- **Validation:** Zod
 
 ## Getting Started
 
@@ -75,9 +118,53 @@ npx prisma generate
 npx prisma db push
 ```
 
-4. Start the development server:
+4. Seed the database with 90 days of realistic engineering data:
+```bash
+npx ts-node prisma/seed.ts
+```
+
+5. Start the development server:
 ```bash
 npm run dev
 ```
 
-The application will be running at `http://localhost:3000`. Access the dashboard at `/dashboard`.
+The application will be running at `http://localhost:3000`. Navigate to `/dashboard` for the main engineering intelligence view, `/incidents` for incident management, and `/team` for contribution analytics.
+
+## Project Structure
+
+```
+src/
+  app/
+    (app)/
+      dashboard/       -- Main DORA metrics dashboard with anomaly alerts
+      incidents/       -- Incident timeline and postmortem management
+      team/            -- Contributor leaderboard and load distribution
+    api/
+      alerts/          -- Anomaly detection API
+      teams/           -- Team CRUD with Zod validation
+      repositories/    -- Repository analytics endpoints
+      webhooks/github/ -- Webhook receiver with HMAC verification
+      stream/          -- SSE streaming endpoint
+      auth/            -- NextAuth.js authentication
+  lib/
+    algorithms/
+      graph.ts         -- DAG traversal and critical path detection
+      anomaly.ts       -- Z-score sliding window anomaly detection
+    cache/
+      lru.ts           -- LRU cache with TTL eviction
+    metrics/
+      dora.ts          -- Deployment frequency, lead time, MTTR
+      pr.ts            -- PR bottleneck detection
+      health.ts        -- Composite team health scoring
+      sprint.ts        -- Sprint velocity and scope creep
+      burnout.ts       -- Predictive burnout heuristics
+      contributors.ts  -- Per-developer contribution rankings
+  workers/
+    githubWorker.ts    -- Background event normalization worker
+  components/
+    Sidebar.tsx        -- Persistent navigation sidebar
+    DashboardLayout.tsx -- Shared layout with sidebar
+prisma/
+  schema.prisma        -- Full relational data model
+  seed.ts              -- Realistic 90-day data generator
+```

@@ -174,8 +174,24 @@ model Incident {
   repositoryId String
   title        String
   state        String
+  severity     String   @default("medium") // low, medium, high, critical
+  rootCause    String?
+  postmortem   String?  @db.Text
+  actionItems  String[] // Array of follow-up action items
   openedAt     DateTime @default(now())
   resolvedAt   DateTime?
 
   repository   Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  updates      IncidentUpdate[]
+}
+
+model IncidentUpdate {
+  id         String   @id @default(cuid())
+  incidentId String
+  status     String   // investigating, identified, monitoring, resolved
+  message    String   @db.Text
+  authorId   String
+  createdAt  DateTime @default(now())
+
+  incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
 }
