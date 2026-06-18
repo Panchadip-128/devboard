@@ -26,9 +26,15 @@ export async function POST(req: NextRequest) {
   const eventType = req.headers.get('x-github-event') || 'unknown';
   const payload = JSON.parse(bodyText);
 
-  // Enqueue job to pg-boss
+  // Enqueue job to pg-boss with robust Distributed System parameters
   const queue = await getQueue();
-  await queue.send('github-webhook', { eventType, payload });
+  await queue.send('github-webhook', { eventType, payload }, {
+    retryLimit: 5,
+    retryBackoff: true, // Exponential backoff
+    retryDelay: 30, // 30s base delay
+    expireInSeconds: 300, // Timeout job after 5 minutes
+    deadLetter: 'dlq-github-webhook' // Send to DLQ on final failure
+  });
 
   return NextResponse.json({ status: 'queued' });
 }

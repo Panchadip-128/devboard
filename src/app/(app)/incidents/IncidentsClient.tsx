@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { Card, Title, Text, Badge } from '@tremor/react';
+import { useRouter } from 'next/navigation';
+import { Card, Title, Text, Badge, Button } from '@tremor/react';
+import { Sparkles } from 'lucide-react';
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: 'bg-red-500/15 text-red-400 border-red-500/30',
@@ -18,8 +20,25 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function IncidentsClient({ incidents }: { incidents: any[] }) {
+  const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(incidents[0]?.id || null);
   const [filter, setFilter] = useState<'all' | 'open' | 'resolved'>('all');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const generateRootCause = async () => {
+    if (!selectedId) return;
+    setIsAnalyzing(true);
+    try {
+      const res = await fetch(`/api/incidents/${selectedId}/analyze`, { method: 'POST' });
+      if (res.ok) {
+        router.refresh(); // Refresh server data to get the new root cause
+      }
+    } catch (error) {
+      console.error('Failed to generate root cause:', error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const filtered = incidents.filter((inc) => {
     if (filter === 'open') return inc.state === 'open';
@@ -102,10 +121,24 @@ export default function IncidentsClient({ incidents }: { incidents: any[] }) {
                   </Badge>
                 </div>
 
-                {selected.rootCause && (
-                  <div className="mb-6 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                    <p className="text-xs uppercase tracking-wider text-slate-500 mb-1">Root Cause</p>
-                    <p className="text-sm text-slate-300">{selected.rootCause}</p>
+                {selected.rootCause ? (
+                  <div className="mb-6 p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      <p className="text-xs uppercase tracking-wider font-semibold text-indigo-400">AI Root Cause Analysis</p>
+                    </div>
+                    <p className="text-sm text-slate-200 leading-relaxed">{selected.rootCause}</p>
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <Button 
+                      onClick={generateRootCause} 
+                      loading={isAnalyzing}
+                      icon={Sparkles}
+                      className="bg-indigo-600 hover:bg-indigo-500 border-none text-white"
+                    >
+                      Generate AI Root Cause Analysis
+                    </Button>
                   </div>
                 )}
 

@@ -71,6 +71,14 @@ Here are the visual representations of the platform's key components and metrics
 - **Team Metrics (`/api/teams/:teamId/metrics`)**:
   ![API Teams](./screenshots/api_teams_page.png)
 
+### 7. Global Command Palette (Full-Text Search)
+*Fast, keyboard-driven global search across incidents, repositories, and team members.*
+![Command Palette](./screenshots/command_palette.png)
+
+### 8. Automated Root Cause Analysis (GenAI)
+*Google Gemini integration analyzing recent commits and deployments to generate incident root causes.*
+![GenAI Root Cause](./screenshots/incident_ai.png)
+
 ## Advanced SDE Features
 
 ### 1. Algorithmic PR Dependency Graph

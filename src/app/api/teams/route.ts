@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { requireRole } from '@/lib/rbac';
 
 const CreateTeamSchema = z.object({
   name: z.string().min(1).max(100),
@@ -27,6 +28,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Enforce RBAC: Only ADMINs can create new teams
+    const authResponse = await requireRole(['ADMIN']);
+    if (authResponse instanceof NextResponse) {
+      return authResponse;
+    }
+
     const body = await req.json();
     const validated = CreateTeamSchema.safeParse(body);
 

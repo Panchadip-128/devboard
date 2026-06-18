@@ -1,4 +1,5 @@
 import Sidebar from '@/components/Sidebar';
+import { CommandPalette } from '@/components/CommandPalette';
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
       <main className="ml-64 flex-1">
         {children}
       </main>
+      <CommandPalette />
     </div>
   );
 }

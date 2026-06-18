@@ -16,6 +16,17 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         // @ts-ignore
         session.user.id = user.id;
+
+        // Fetch the user's role from TeamMember mapping for RBAC
+        const teamMember = await prisma.teamMember.findFirst({
+          where: { userId: user.id },
+          select: { role: true, teamId: true }
+        });
+        
+        // @ts-ignore
+        session.user.role = teamMember?.role || 'VIEWER';
+        // @ts-ignore
+        session.user.teamId = teamMember?.teamId || null;
       }
       return session;
     },

@@ -3,6 +3,7 @@ import prisma from '@/lib/prisma';
 import { getDoraMetrics } from '@/lib/metrics/dora';
 import { getTeamHealthScore } from '@/lib/metrics/health';
 import { predictBurnoutRisk } from '@/lib/metrics/burnout';
+import redis from '@/lib/redis';
 
 export async function GET(
   req: NextRequest,
@@ -13,6 +14,17 @@ export async function GET(
     const searchParams = req.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '30', 10);
     const includeBreakdown = searchParams.get('includeBreakdown') === 'true';
+
+    // 1. Check Redis Cache
+    const cacheKey = `team:${teamId}:metrics:${days}:${includeBreakdown}`;
+    const cachedData = await redis.get(cacheKey);
+    
+    if (cachedData) {
+      console.log(`[Redis] Cache HIT for ${cacheKey}`);
+      return NextResponse.json(JSON.parse(cachedData));
+    }
+
+    console.log(`[Redis] Cache MISS for ${cacheKey}. Calculating metrics...`);
 
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -66,6 +78,9 @@ export async function GET(
         breakdown: r.health.breakdown,
       }));
     }
+
+    // 2. Set Redis Cache (Expire after 5 minutes to keep dashboard fresh but reduce load)
+    await redis.setex(cacheKey, 300, JSON.stringify(response));
 
     return NextResponse.json(response);
   } catch (error) {

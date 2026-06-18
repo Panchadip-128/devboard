@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import redis from '@/lib/redis';
 
 /**
  * Contributor Analytics Engine
@@ -22,6 +23,16 @@ export async function getContributorRankings(
   repositoryId: string,
   days: number = 30
 ): Promise<ContributorStats[]> {
+  const cacheKey = `repo:${repositoryId}:contributors:${days}`;
+  const cachedData = await redis.get(cacheKey);
+
+  if (cachedData) {
+    console.log(`[Redis] Cache HIT for ${cacheKey}`);
+    return JSON.parse(cachedData);
+  }
+
+  console.log(`[Redis] Cache MISS for ${cacheKey}. Calculating...`);
+
   const since = new Date();
   since.setDate(since.getDate() - days);
 
@@ -103,5 +114,10 @@ export async function getContributorRankings(
     });
   }
 
-  return results.sort((a, b) => b.commits - a.commits);
+  const sortedResults = results.sort((a, b) => b.commits - a.commits);
+  
+  // Cache the result for 5 minutes
+  await redis.setex(cacheKey, 300, JSON.stringify(sortedResults));
+  
+  return sortedResults;
 }
