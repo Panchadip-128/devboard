@@ -46,38 +46,38 @@ Here are the visual representations of the platform's key components and metrics
 
 ### 1. Landing Page
 *The new dark-themed, glassmorphic welcome screen showcasing real-time DevBoard capabilities.*
-![Landing Page](./screenshots/landing_page.png)
+![Landing Page](./assets/landing_page.png)
 
 ### 2. DORA Metrics Dashboard
 *Real-time computed Deployment Frequency, Lead Time for Changes, MTTR, and Change Failure Rate with composite team health score.*
-![Dashboard](./screenshots/dashboard_page.png)
+![Dashboard](./assets/dashboard_page.png)
 
 ### 3. Incidents Management Timeline
 *Active incidents and interactive chronological postmortem statuses.*
-![Incidents](./screenshots/incidents_page.png)
+![Incidents](./assets/incidents_page.png)
 
 ### 4. Team Leaderboard & Contributor Rankings
 *Dynamic leaderboards ranking contributors by commits, PR reviews responsiveness, and load percentages.*
-![Team Leaderboard](./screenshots/team_leaderboard_page.png)
+![Team Leaderboard](./assets/team_leaderboard_page.png)
 
 ### 5. Service Architecture Hierarchy Map
 *SVG-based node graphs showing critical path blocking dependencies and service health.*
-![Architecture Map](./screenshots/architecture_page.png)
+![Architecture Map](./assets/architecture_page.png)
 
 ### 6. API Endpoints Metrics Output
 *JSON representations of analytical DORA metrics and active anomaly alerts.*
 - **Anomaly Alerts (`/api/alerts`)**:
-  ![API Alerts](./screenshots/api_alerts_page.png)
+  ![API Alerts](./assets/api_alerts_page.png)
 - **Team Metrics (`/api/teams/:teamId/metrics`)**:
-  ![API Teams](./screenshots/api_teams_page.png)
+  ![API Teams](./assets/api_teams_page.png)
 
 ### 7. Global Command Palette (Full-Text Search)
 *Fast, keyboard-driven global search across incidents, repositories, and team members.*
-![Command Palette](./screenshots/command_palette.png)
+![Command Palette](./assets/command_palette.png)
 
 ### 8. Automated Root Cause Analysis (GenAI)
 *Google Gemini integration analyzing recent commits and deployments to generate incident root causes.*
-![GenAI Root Cause](./screenshots/incident_ai.png)
+![GenAI Root Cause](./assets/incident_ai.png)
 
 ## Advanced SDE Features
 
