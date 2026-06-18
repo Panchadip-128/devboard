@@ -1,8 +1,8 @@
-import PgBoss from 'pg-boss';
+import { PgBoss } from 'pg-boss';
 
 const boss = new PgBoss(process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/postgres');
 
-boss.on('error', (error) => console.error('pg-boss error:', error));
+boss.on('error', (error: any) => console.error('pg-boss error:', error));
 
 let isStarted = false;
 

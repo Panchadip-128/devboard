@@ -6,10 +6,10 @@ import prisma from '@/lib/prisma';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { repoId: string } }
+  { params }: { params: Promise<{ repoId: string }> }
 ) {
   try {
-    const { repoId } = params;
+    const { repoId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '30', 10);
 

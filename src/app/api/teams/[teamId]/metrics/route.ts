@@ -6,10 +6,10 @@ import { predictBurnoutRisk } from '@/lib/metrics/burnout';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { teamId: string } }
+  { params }: { params: Promise<{ teamId: string }> }
 ) {
   try {
-    const { teamId } = params;
+    const { teamId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const days = parseInt(searchParams.get('days') || '30', 10);
     const includeBreakdown = searchParams.get('includeBreakdown') === 'true';

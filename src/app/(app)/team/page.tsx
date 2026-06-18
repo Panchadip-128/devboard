@@ -1,13 +1,22 @@
 import { getContributorRankings } from '@/lib/metrics/contributors';
 import TeamClient from './TeamClient';
+import prisma from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 async function fetchTeamData() {
   try {
-    const rankings = await getContributorRankings('demo-repo-id', 30);
+    const repo = await prisma.repository.findFirst();
+    if (!repo) {
+      throw new Error('No repository found in database');
+    }
+    const rankings = await getContributorRankings(repo.id, 30);
+    if (!rankings || rankings.length === 0) {
+      throw new Error('No rankings found for the active repository');
+    }
     return rankings;
-  } catch {
+  } catch (error) {
+    console.error('Error fetching team contributor rankings, falling back to mock data:', error);
     // Fallback mock data
     return [
       { authorId: 'alice', commits: 142, prsOpened: 18, prsMerged: 15, avgPrMergeTimeHours: 8.2, reviewResponsivenessScore: 88, loadPercentage: 22.1 },

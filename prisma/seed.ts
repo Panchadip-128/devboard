@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -98,14 +99,14 @@ async function main() {
   await prisma.team.deleteMany();
 
   console.log('Seeding teams...');
-  const teams = await Promise.all(
+  const teams: any[] = await Promise.all(
     TEAM_NAMES.map((t) =>
       prisma.team.create({ data: { name: t.name, slug: t.slug } })
     )
   );
 
   console.log('Seeding repositories...');
-  const repos = await Promise.all(
+  const repos: any[] = await Promise.all(
     REPO_NAMES.map((r, i) =>
       prisma.repository.create({
         data: {

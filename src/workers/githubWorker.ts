@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 export async function startGithubWorker() {
   const queue = await getQueue();
 
-  await queue.work('github-webhook', async ([job]) => {
+  await queue.work('github-webhook', async ([job]: any[]) => {
     const { eventType, payload } = job.data as { eventType: string; payload: any };
     
     try {
