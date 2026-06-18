@@ -8,7 +8,7 @@ DevBoard is a high-performance engineering telemetry platform designed to ingest
 
 ---
 
-## 🚀 Production Engineering Standards
+## Production Engineering Standards
 
 DevBoard is engineered to handle enterprise-grade workloads, emphasizing high concurrency, strict authorization, and observability:
 
@@ -22,7 +22,7 @@ DevBoard is engineered to handle enterprise-grade workloads, emphasizing high co
 
 ---
 
-## 🧠 Core Intelligence Features
+## Core Intelligence Features
 
 ### Advanced DORA Metrics Engine
 Natively calculates standard engineering metrics including **Deployment Frequency**, **Lead Time for Changes**, and **Mean Time To Recovery (MTTR)**. These metrics are dynamically cross-referenced with bug densities to generate composite executive-level Team Health Scores.
@@ -38,7 +38,7 @@ A predictive algorithm parsing raw commit timestamp metadata. By calculating rat
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -56,29 +56,43 @@ graph TD
     L -->|Z-Score Alerts| K
 ```
 
-Our event ingestion pipeline is built to handle high-concurrency webhook streams without dropping events. By utilizing PostgreSQL's advanced row-level locking, multiple worker instances can process database rows safely without race conditions. 
+**Architecture Flow Explanation:**
+1. **Ingestion & Verification**: GitHub Webhooks send POST payloads to the Next.js API Receiver. The system instantly verifies the HMAC SHA-256 signature to prevent spoofing. Valid payloads are inserted into a PostgreSQL-backed job queue (`pg-boss`), while invalid ones are immediately rejected with a 401 Unauthorized status.
+2. **Concurrent Processing**: Background worker instances utilize PostgreSQL's `SKIP LOCKED` feature to concurrently claim jobs from the queue without race conditions. They parse complex nested JSON from GitHub and normalize it into a relational schema in the PostgreSQL Database.
+3. **Analytics & Caching**: The Analytical Engine runs heavy aggregate queries on the normalized data to compute DORA metrics and detect anomalies. To protect the database from concurrent dashboard load, these results are cached in an in-memory Least Recently Used (LRU) Cache layer.
+4. **Real-Time Delivery**: A dedicated Server-Sent Events (SSE) streaming route pushes the cached metrics and live anomaly alerts directly to the Next.js Dashboard UI, ensuring users see sub-second metric updates without the overhead of WebSockets.
 
 ---
 
-## 📸 Platform Previews
+## Platform Previews
 
 ### Landing Page & Dashboard
 *A modern, dark-themed interface showcasing real-time DORA metrics.*
+
 ![Landing Page](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/landing_page.png)
+**Explanation:** The landing page serves as the entry point for engineering managers. It emphasizes the platform's core value proposition through a glassmorphic design and clear calls to action, immediately establishing an enterprise-grade aesthetic.
+
 ![Dashboard](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/dashboard_page.png)
+**Explanation:** The primary metrics dashboard calculates and visualizes four key DORA metrics (Deployment Frequency, Lead Time, MTTR, Change Failure Rate) over a 30-day window. The composite "Team Health" score aggregates these metrics to provide executives with a single, highly readable health grade.
 
 ### Architecture Maps & Incidents
 *Interactive SVG-based node graphs and chronological incident postmortem timelines.*
+
 ![Architecture Map](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/architecture_page.png)
+**Explanation:** This diagram visually represents the relationships between different microservices or code repositories within the team's domain. It helps engineering leaders identify structural bottlenecks, single points of failure, and the complex dependency chains that slow down deployments.
+
 ![Incidents](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/incidents_page.png)
+**Explanation:** The incidents timeline provides a chronological audit trail for production outages. It tracks status transitions from 'investigating' to 'resolved' and houses structured postmortems, enabling teams to categorize root causes and assign actionable follow-ups to prevent future regressions.
 
 ### Automated Root Cause Analysis
 *Google Gemini integrations automatically analyzing recent commits to generate root cause summaries.*
+
 ![GenAI Root Cause](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/incident_ai.png)
+**Explanation:** By integrating with Large Language Models (Google Gemini), the platform automatically parses the diffs of commits deployed right before an incident occurred. The AI generates a human-readable hypothesis of the root cause, dramatically reducing the time engineers spend debugging during a live outage.
 
 ---
 
-## 💻 Technology Stack
+## Technology Stack
 
 - **Framework:** Next.js 14 (App Router)
 - **Language:** TypeScript (Strict)
@@ -92,7 +106,7 @@ Our event ingestion pipeline is built to handle high-concurrency webhook streams
 
 ---
 
-## ⚙️ Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 20+
@@ -145,7 +159,7 @@ npm run webhook:tunnel
 
 ---
 
-## 📡 REST API Reference
+## REST API Reference
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
