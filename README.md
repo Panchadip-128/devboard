@@ -40,6 +40,37 @@ A comparative analytics engine that ranks team members by contribution patterns.
 ### Statistical Anomaly Detection Engine
 A sliding window Z-score algorithm operating over historical DORA metric time series. When a metric deviates more than 2 standard deviations from its 30-day rolling mean, the system flags an anomaly as either a spike or drop with warning or critical severity levels.
 
+## Application Screenshots
+
+Here are the visual representations of the platform's key components and metrics:
+
+### 1. Landing Page
+*The landing/welcome screen showcasing the main entry point.*
+![Landing Page](./screenshots/landing_page.png)
+
+### 2. DORA Metrics Dashboard
+*Real-time computed Deployment Frequency, Lead Time for Changes, MTTR, and Change Failure Rate with composite team health score.*
+![Dashboard](./screenshots/dashboard_page.png)
+
+### 3. Incidents Management Timeline
+*Active incidents and interactive chronological postmortem statuses.*
+![Incidents](./screenshots/incidents_page.png)
+
+### 4. Team Leaderboard & Contributor Rankings
+*Dynamic leaderboards ranking contributors by commits, PR reviews responsiveness, and load percentages.*
+![Team Leaderboard](./screenshots/team_leaderboard_page.png)
+
+### 5. Service Architecture Hierarchy Map
+*SVG-based node graphs showing critical path blocking dependencies and service health.*
+![Architecture Map](./screenshots/architecture_page.png)
+
+### 6. API Endpoints Metrics Output
+*JSON representations of analytical DORA metrics and active anomaly alerts.*
+- **Anomaly Alerts (`/api/alerts`)**:
+  ![API Alerts](./screenshots/api_alerts_page.png)
+- **Team Metrics (`/api/teams/:teamId/metrics`)**:
+  ![API Teams](./screenshots/api_teams_page.png)
+
 ## Advanced SDE Features
 
 ### 1. Algorithmic PR Dependency Graph
