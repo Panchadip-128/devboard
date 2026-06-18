@@ -6,14 +6,14 @@ DevBoard is an advanced engineering telemetry and intelligence platform designed
 
 ## Production Engineering Features
 
-✓ **OpenTelemetry Tracing** & **Prometheus Metrics** via Grafana Dashboards
-✓ **Redis Caching** for high-performance sub-millisecond aggregations
-✓ **Background Workers** with PostgreSQL `SKIP LOCKED` (`pg-boss`)
-✓ **Dead Letter Queue** (DLQ) for robust GitHub Webhook processing
-✓ **Unit Testing** and **Integration Testing** covering Webhook ingestion & Queue processing
-✓ **Load Testing** benchmarking API limits and Database protection
-✓ **RBAC Authorization** for enterprise-grade security
-✓ **Real-Time SSE Streaming** via Redis Pub/Sub
+- ✓ **OpenTelemetry Tracing** & **Prometheus Metrics** via Grafana Dashboards
+- ✓ **Redis Caching** for high-performance sub-millisecond aggregations
+- ✓ **Background Workers** with PostgreSQL `SKIP LOCKED` (`pg-boss`)
+- ✓ **Dead Letter Queue** (DLQ) for robust GitHub Webhook processing
+- ✓ **Unit Testing** and **Integration Testing** covering Webhook ingestion & Queue processing
+- ✓ **Load Testing** benchmarking API limits and Database protection
+- ✓ **RBAC Authorization** for enterprise-grade security
+- ✓ **Real-Time SSE Streaming** via Redis Pub/Sub
 
 ## System Architecture
 
