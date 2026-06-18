@@ -45,7 +45,7 @@ A sliding window Z-score algorithm operating over historical DORA metric time se
 Here are the visual representations of the platform's key components and metrics:
 
 ### 1. Landing Page
-*The landing/welcome screen showcasing the main entry point.*
+*The new dark-themed, glassmorphic welcome screen showcasing real-time DevBoard capabilities.*
 ![Landing Page](./screenshots/landing_page.png)
 
 ### 2. DORA Metrics Dashboard
