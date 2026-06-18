@@ -1,6 +1,19 @@
 # DevBoard: Engineering Team Intelligence Platform
 
+[![CI](https://github.com/Panchadip-128/devboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Panchadip-128/devboard/actions/workflows/ci.yml)
+
 DevBoard is an advanced engineering telemetry and intelligence platform designed to ingest raw development lifecycle events and transform them into actionable insights. By leveraging an event-driven architecture, DevBoard computes complex DORA metrics, maps pull request bottlenecks, detects statistical anomalies, and predicts team health in real-time.
+
+## Production Engineering Features
+
+✓ **OpenTelemetry Tracing** & **Prometheus Metrics** via Grafana Dashboards
+✓ **Redis Caching** for high-performance sub-millisecond aggregations
+✓ **Background Workers** with PostgreSQL `SKIP LOCKED` (`pg-boss`)
+✓ **Dead Letter Queue** (DLQ) for robust GitHub Webhook processing
+✓ **Unit Testing** and **Integration Testing** covering Webhook ingestion & Queue processing
+✓ **Load Testing** benchmarking API limits and Database protection
+✓ **RBAC Authorization** for enterprise-grade security
+✓ **Real-Time SSE Streaming** via Redis Pub/Sub
 
 ## System Architecture
 
@@ -46,38 +59,38 @@ Here are the visual representations of the platform's key components and metrics
 
 ### 1. Landing Page
 *The new dark-themed, glassmorphic welcome screen showcasing real-time DevBoard capabilities.*
-![Landing Page](./assets/landing_page.png)
+![Landing Page](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/landing_page.png)
 
 ### 2. DORA Metrics Dashboard
 *Real-time computed Deployment Frequency, Lead Time for Changes, MTTR, and Change Failure Rate with composite team health score.*
-![Dashboard](./assets/dashboard_page.png)
+![Dashboard](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/dashboard_page.png)
 
 ### 3. Incidents Management Timeline
 *Active incidents and interactive chronological postmortem statuses.*
-![Incidents](./assets/incidents_page.png)
+![Incidents](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/incidents_page.png)
 
 ### 4. Team Leaderboard & Contributor Rankings
 *Dynamic leaderboards ranking contributors by commits, PR reviews responsiveness, and load percentages.*
-![Team Leaderboard](./assets/team_leaderboard_page.png)
+![Team Leaderboard](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/team_leaderboard_page.png)
 
 ### 5. Service Architecture Hierarchy Map
 *SVG-based node graphs showing critical path blocking dependencies and service health.*
-![Architecture Map](./assets/architecture_page.png)
+![Architecture Map](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/architecture_page.png)
 
 ### 6. API Endpoints Metrics Output
 *JSON representations of analytical DORA metrics and active anomaly alerts.*
 - **Anomaly Alerts (`/api/alerts`)**:
-  ![API Alerts](./assets/api_alerts_page.png)
+  ![API Alerts](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/api_alerts_page.png)
 - **Team Metrics (`/api/teams/:teamId/metrics`)**:
-  ![API Teams](./assets/api_teams_page.png)
+  ![API Teams](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/api_teams_page.png)
 
 ### 7. Global Command Palette (Full-Text Search)
 *Fast, keyboard-driven global search across incidents, repositories, and team members.*
-![Command Palette](./assets/command_palette.png)
+![Command Palette](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/command_palette.png)
 
 ### 8. Automated Root Cause Analysis (GenAI)
 *Google Gemini integration analyzing recent commits and deployments to generate incident root causes.*
-![GenAI Root Cause](./assets/incident_ai.png)
+![GenAI Root Cause](https://raw.githubusercontent.com/Panchadip-128/devboard/main/assets/incident_ai.png)
 
 ## Advanced SDE Features
 
@@ -87,8 +100,8 @@ We implemented a Directed Acyclic Graph (DAG) algorithm utilizing Depth First Se
 ### 2. LRU Aggregation Caching Layer
 To protect the database during traffic spikes, we developed an in-memory Least Recently Used (LRU) Cache layer. This cache employs a Time-To-Live (TTL) eviction strategy to serve highly complex analytical queries in constant time.
 
-### 3. Predictive Burnout Analysis Heuristics
-We developed a predictive heuristic algorithm that parses the raw timestamp metadata of commit histories. By calculating ratios of excessive weekend work and late-night coding (10 PM to 4 AM), the system programmatically assigns a "Burnout Risk Level" to individual engineers.
+### 3. Workload Distribution Heuristics
+We developed a predictive heuristic algorithm that parses the raw timestamp metadata of commit histories. By calculating ratios of excessive weekend work and late-night coding (10 PM to 4 AM), the system programmatically assigns a "Workload Risk Level" to individual engineers.
 
 ## Backend Architecture Deep-Dive
 
@@ -120,7 +133,7 @@ We engineered a Server-Sent Events (SSE) pipeline backed by Redis Pub/Sub to pro
 |----------|--------|-------------|
 | `/api/teams` | GET | List all teams with member and repository counts |
 | `/api/teams` | POST | Create a new team with Zod input validation |
-| `/api/teams/:teamId/metrics` | GET | Aggregated DORA, health, burnout metrics for a team |
+| `/api/teams/:teamId/metrics` | GET | Aggregated DORA, health, workload metrics for a team |
 | `/api/repositories/:repoId/analytics` | GET | DORA metrics, PR bottlenecks, and health for a repository |
 | `/api/alerts` | GET | Active anomaly alerts across all metric time series |
 | `/api/webhooks/github` | POST | GitHub webhook receiver with HMAC signature verification |
@@ -173,7 +186,34 @@ npm install
 DATABASE_URL="postgresql://user:password@localhost:5432/devboard"
 NEXTAUTH_SECRET="your-secret"
 GITHUB_WEBHOOK_SECRET="your-webhook-secret"
+REDIS_URL="redis://localhost:6379"
 ```
+
+### Production Deployment (Vercel)
+
+To deploy DevBoard to production and ensure all real-time functionalities work correctly, you must configure the following:
+
+1. **Database (Neon)**: Set up a PostgreSQL database (e.g., using Neon) and provide the `DATABASE_URL` in your Vercel project environment variables.
+2. **Redis (Upstash)**: The SSE real-time streaming relies on a Redis Pub/Sub mechanism. You must provision an Upstash Redis database via Vercel integrations and set the `REDIS_URL` environment variable.
+3. **Authentication**: Set the `NEXTAUTH_SECRET` and ensure the NextAuth URL matches your Vercel deployment URL.
+4. **Webhooks**: Set a highly secure `GITHUB_WEBHOOK_SECRET`.
+
+### Connecting Real GitHub Webhooks
+
+While you can test with seed data locally, connecting real GitHub repositories to your live DevBoard deployment demonstrates the event-driven architecture in real-time.
+
+1. Navigate to your repository on GitHub.
+2. Go to **Settings > Webhooks > Add webhook**.
+3. **Payload URL**: `https://<your-vercel-domain>/api/webhooks/github`
+4. **Content type**: `application/json`
+5. **Secret**: Enter the exact string you used for `GITHUB_WEBHOOK_SECRET` in your Vercel environment variables.
+6. **Events**: Select **Let me select individual events**, and check the following:
+   - Commit comments
+   - Pull requests
+   - Pull request reviews
+   - Pushes
+   - Deployments
+   - Issues
 
 3. Initialize the database schema and generate the Prisma client:
 ```bash
@@ -220,7 +260,7 @@ src/
       pr.ts            -- PR bottleneck detection
       health.ts        -- Composite team health scoring
       sprint.ts        -- Sprint velocity and scope creep
-      burnout.ts       -- Predictive burnout heuristics
+      workload.ts       -- Workload distribution heuristics
       contributors.ts  -- Per-developer contribution rankings
   workers/
     githubWorker.ts    -- Background event normalization worker

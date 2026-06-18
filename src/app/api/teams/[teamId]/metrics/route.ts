@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getDoraMetrics } from '@/lib/metrics/dora';
 import { getTeamHealthScore } from '@/lib/metrics/health';
-import { predictBurnoutRisk } from '@/lib/metrics/burnout';
+import { predictWorkloadRisk } from '@/lib/metrics/workload';
 import redis from '@/lib/redis';
 
 export async function GET(
@@ -47,10 +47,10 @@ export async function GET(
       })
     );
 
-    // Aggregate burnout risks across all team members
-    const burnoutRisks = await Promise.all(
+    // Aggregate workload risks across all team members
+    const workloadRisks = await Promise.all(
       team.members.map(async (member) => {
-        const risk = await predictBurnoutRisk(member.userId, days);
+        const risk = await predictWorkloadRisk(member.userId, days);
         return risk;
       })
     );
@@ -60,7 +60,7 @@ export async function GET(
       teamName: team.name,
       period: { days },
       repositories: repoMetrics,
-      burnoutRisks: burnoutRisks.filter((r) => r.risk !== 'UNKNOWN'),
+      workloadRisks: workloadRisks.filter((r) => r.risk !== 'UNKNOWN'),
       summary: {
         totalRepositories: team.repositories.length,
         totalMembers: team.members.length,
@@ -68,7 +68,7 @@ export async function GET(
           repoMetrics.length > 0
             ? Math.round(repoMetrics.reduce((sum, r) => sum + r.health.score, 0) / repoMetrics.length)
             : 0,
-        criticalBurnouts: burnoutRisks.filter((r) => r.risk === 'CRITICAL').length,
+        criticalWorkloads: workloadRisks.filter((r) => r.risk === 'CRITICAL').length,
       },
     };
 

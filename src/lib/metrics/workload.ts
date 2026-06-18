@@ -1,10 +1,10 @@
 import { prisma } from '../prisma';
 
 /**
- * Predictive heuristics analyzing engineering metadata to flag burnout risks.
+ * Workload distribution heuristics analyzing engineering metadata to flag excessive load.
  * Detects prolonged late-night coding and excessive weekend deployments.
  */
-export async function predictBurnoutRisk(authorId: string, days: number = 30) {
+export async function predictWorkloadRisk(authorId: string, days: number = 30) {
   const since = new Date();
   since.setDate(since.getDate() - days);
 
