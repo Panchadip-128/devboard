@@ -1,6 +1,6 @@
 # DevBoard: Engineering Team Intelligence Platform
 
-[![CI](https://github.com/Panchadip-128/devboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Panchadip-128/devboard/actions/workflows/ci.yml)
+
 
 DevBoard is an advanced engineering telemetry and intelligence platform designed to ingest raw development lifecycle events and transform them into actionable insights. By leveraging an event-driven architecture, DevBoard computes complex DORA metrics, maps pull request bottlenecks, detects statistical anomalies, and predicts team health in real-time.
 
