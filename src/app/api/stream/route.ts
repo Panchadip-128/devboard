@@ -2,6 +2,16 @@ import redis from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * Real-Time Server-Sent Events (SSE) Pipeline.
+ * 
+ * This endpoint establishes a unidirectional, persistent HTTP connection with the browser.
+ * It uses a duplicated Redis client to subscribe to the `realtime-updates` Pub/Sub channel.
+ * 
+ * Architecture Trade-off: We chose SSE over WebSockets because the DevBoard dashboard is 
+ * purely a *consumer* of real-time metrics. SSE has significantly less handshake overhead, 
+ * natively handles connection drops/reconnects, and effortlessly bypasses restrictive corporate firewalls.
+ */
 export async function GET(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {

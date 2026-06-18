@@ -4,6 +4,15 @@ import { getQueue } from '@/lib/queue';
 
 const WEBHOOK_SECRET = process.env.GITHUB_WEBHOOK_SECRET || 'secret';
 
+/**
+ * Cryptographically verifies the incoming GitHub webhook payload.
+ * Prevents spoofing attacks by hashing the raw body with our shared secret
+ * and comparing it against the `x-hub-signature-256` header in constant time.
+ * 
+ * @param req - The Next.js request object containing the headers
+ * @param body - The raw unparsed string body of the request
+ * @returns boolean - True if the signature matches, false otherwise
+ */
 function verifySignature(req: NextRequest, body: string) {
   const signature = req.headers.get('x-hub-signature-256');
   if (!signature) return false;
@@ -15,6 +24,13 @@ function verifySignature(req: NextRequest, body: string) {
   return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
 }
 
+/**
+ * GitHub Webhook Ingestion Endpoint.
+ * 
+ * This endpoint strictly acts as a lightweight receiver. It validates the payload
+ * and immediately offloads the processing to a PostgreSQL-backed queue (`pg-boss`).
+ * This prevents dropped webhooks during traffic spikes and ensures exactly-once delivery.
+ */
 export async function POST(req: NextRequest) {
   const bodyText = await req.text();
   

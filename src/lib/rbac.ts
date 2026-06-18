@@ -5,9 +5,17 @@ import { NextResponse } from "next/server";
 export type Role = 'ADMIN' | 'MEMBER' | 'VIEWER';
 
 /**
- * Validates if the current user has the required role.
- * If validation fails, it returns a 403 NextResponse that should be returned by the API route.
- * If successful, it returns the authenticated user object.
+ * Centralized Role-Based Access Control (RBAC) Middleware.
+ * 
+ * This utility enforces strict authorization across our API endpoints.
+ * It intercepts the NextAuth JSON Web Token (which contains the user's database-mapped `Role`)
+ * and validates it against the endpoint's allowed roles. 
+ * 
+ * By checking the cryptographically signed JWT rather than querying the database 
+ * on every request, we prevent privilege escalation while maintaining high Edge network throughput.
+ *
+ * @param allowedRoles - An array of `Role` enums permitted to execute the calling function.
+ * @returns {Promise<NextResponse | User>} A 403/401 Next.js Response if unauthorized, or the User object if successful.
  */
 export async function requireRole(allowedRoles: Role[]) {
   const session = await getServerSession(authOptions);
