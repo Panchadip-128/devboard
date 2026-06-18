@@ -90,6 +90,30 @@ To protect the database during traffic spikes, we developed an in-memory Least R
 ### 3. Predictive Burnout Analysis Heuristics
 We developed a predictive heuristic algorithm that parses the raw timestamp metadata of commit histories. By calculating ratios of excessive weekend work and late-night coding (10 PM to 4 AM), the system programmatically assigns a "Burnout Risk Level" to individual engineers.
 
+## Backend Architecture Deep-Dive
+
+To demonstrate senior-level system design, DevBoard employs several advanced backend architectural patterns:
+
+### 1. High-Performance Redis Caching
+To support instant dashboard rendering and reduce database load, we implemented a robust caching layer using `ioredis`. 
+* **Location:** `src/lib/redis.ts` and `src/app/api/teams/[teamId]/metrics/route.ts`
+* **Effect:** Heavy aggregation queries (like the 30-day DORA metrics and contributor leaderboards) are cached with a 5-minute TTL. This converts what would be a multi-second PostgreSQL aggregation across thousands of commits into a sub-millisecond Redis `GET` operation.
+
+### 2. Robust Background Job Processing
+We utilize PostgreSQL's `SKIP LOCKED` capabilities via the `pg-boss` queue to handle incoming GitHub webhooks safely and concurrently.
+* **Location:** `src/app/api/webhooks/github/route.ts` and `src/workers/githubWorker.ts`
+* **Effect:** Incoming webhooks are immediately offloaded to a background worker utilizing distributed system best practices: **exponential backoff**, a strict **retry limit of 5**, and automatic routing to a **Dead Letter Queue (dlq-github-webhook)** if the job continuously fails. This ensures 0% data loss during GitHub traffic spikes.
+
+### 3. Advanced Role-Based Access Control (RBAC)
+We implemented a strict security layer intercepting the NextAuth JWT session to enforce authorization on protected routes.
+* **Location:** `src/lib/rbac.ts` and `src/lib/auth.ts`
+* **Effect:** A `requireRole(['ADMIN'])` utility validates the user's role against the database mapping upon every request. This ensures only highly-privileged users can mutate critical state (e.g., creating new Teams), effectively preventing privilege escalation attacks.
+
+### 4. Real-Time Push Events (SSE + Redis Pub/Sub)
+We engineered a Server-Sent Events (SSE) pipeline backed by Redis Pub/Sub to provide a true real-time dashboard experience.
+* **Location:** `src/app/api/stream/route.ts`
+* **Effect:** Instead of the frontend constantly polling the backend (which wastes bandwidth and DB connections), the `api/stream` endpoint acts as an SSE host. When an asynchronous backend event occurs (like the GenAI finishing an incident analysis), it publishes to a Redis channel. The SSE endpoint subscribes to this channel and instantly pushes the payload down to all connected browser clients.
+
 ## REST API
 
 | Endpoint | Method | Description |
