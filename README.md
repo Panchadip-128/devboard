@@ -40,6 +40,8 @@ A predictive algorithm parsing raw commit timestamp metadata. By calculating rat
 
 ## System Architecture
 
+### High-Level Event Ingestion Flow
+
 ```mermaid
 graph TD
     A[GitHub Webhooks] -->|POST Payload| B(Next.js API Receiver)
@@ -61,6 +63,85 @@ graph TD
 2. **Concurrent Processing**: Background worker instances utilize PostgreSQL's `SKIP LOCKED` feature to concurrently claim jobs from the queue without race conditions. They parse complex nested JSON from GitHub and normalize it into a relational schema in the PostgreSQL Database.
 3. **Analytics & Caching**: The Analytical Engine runs heavy aggregate queries on the normalized data to compute DORA metrics and detect anomalies. To protect the database from concurrent dashboard load, these results are cached in an in-memory Least Recently Used (LRU) Cache layer.
 4. **Real-Time Delivery**: A dedicated Server-Sent Events (SSE) streaming route pushes the cached metrics and live anomaly alerts directly to the Next.js Dashboard UI, ensuring users see sub-second metric updates without the overhead of WebSockets.
+
+### Real-Time Pub/Sub Sequence Diagram (SSE)
+
+```mermaid
+sequenceDiagram
+    participant B as Browser (Dashboard)
+    participant N as Next.js API (/api/stream)
+    participant R as Redis (ioredis)
+    participant W as Background Worker
+    participant DB as PostgreSQL
+
+    B->>N: Open SSE Connection (GET /api/stream)
+    N->>R: Subscribe to 'dashboard:updates' channel
+    N-->>B: Establish EventStream stream
+    
+    Note over W, DB: Worker processes a new Pull Request merge
+    W->>DB: Store normalized event
+    W->>R: Publish payload to 'dashboard:updates'
+    R-->>N: Trigger message event
+    N-->>B: Push JSON payload via SSE
+    B->>B: Re-render DORA charts instantly
+```
+**Explanation:** This sequence illustrates our highly efficient unidirectional data flow. Instead of clients aggressively polling the database, they maintain a lightweight, read-only SSE connection. The backend uses Redis Pub/Sub to instantly broadcast database mutations across all serverless instances, which are then pushed directly to active browsers.
+
+### Relational Entity-Relationship (ER) Diagram
+
+```mermaid
+erDiagram
+    TEAM ||--o{ TEAM_MEMBER : "has"
+    TEAM ||--o{ REPOSITORY : "owns"
+    USER ||--o{ TEAM_MEMBER : "belongs to"
+    REPOSITORY ||--o{ PULL_REQUEST : "contains"
+    REPOSITORY ||--o{ COMMIT : "contains"
+    REPOSITORY ||--o{ INCIDENT : "tracks"
+    REPOSITORY ||--o{ DEPLOYMENT : "logs"
+
+    TEAM {
+        string id PK
+        string name
+        int healthScore
+    }
+    USER {
+        string id PK
+        string name
+        string email
+        string role
+    }
+    PULL_REQUEST {
+        string id PK
+        string repositoryId FK
+        string state
+        int leadTimeMinutes
+        datetime mergedAt
+    }
+    INCIDENT {
+        string id PK
+        string repositoryId FK
+        string severity
+        int timeToResolveMinutes
+        string rootCause
+    }
+```
+**Explanation:** The relational model maps the abstract nature of GitHub events into a highly queryable schema. By strictly enforcing foreign-key constraints between Repositories, Pull Requests, Commits, and Incidents, the analytical engine can perform ultra-fast SQL `JOIN`s to calculate exact Lead Time for Changes (measuring the delta between a Commit creation and its corresponding Deployment).
+
+### Automated Root Cause Analysis Workflow
+
+```mermaid
+stateDiagram-v2
+    [*] --> IncidentDetected
+    IncidentDetected --> FetchRecentDeployments : Query PostgreSQL
+    FetchRecentDeployments --> ExtractCommitDiffs : Hit GitHub API
+    ExtractCommitDiffs --> ConstructPrompt : Build Context Window
+    ConstructPrompt --> GoogleGeminiAPI : Send to LLM
+    GoogleGeminiAPI --> ParseResponse : Receive Markdown
+    ParseResponse --> StorePostmortem : Save to Database
+    StorePostmortem --> PublishSSE : Alert Dashboard
+    PublishSSE --> [*]
+```
+**Explanation:** When a critical incident is manually flagged or detected via anomalies, this state machine takes over. It traces the active deployment back to its constituent commits, aggregates the raw code diffs, and constructs an engineered prompt for Google Gemini. The resulting analysis is appended to the incident's postmortem automatically.
 
 ---
 
