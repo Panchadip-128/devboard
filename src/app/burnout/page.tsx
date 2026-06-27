@@ -134,7 +134,13 @@ export default function BurnoutRadar() {
             </Card>
           </div>
         )}
+        
+        {/* Tailwind v4 Safelist Hack for Tremor DonutChart */}
+        <div className="hidden bg-emerald-500 fill-emerald-500 text-emerald-500 ring-emerald-500 stroke-emerald-500" />
+        <div className="hidden bg-amber-500 fill-amber-500 text-amber-500 ring-amber-500 stroke-amber-500" />
+        <div className="hidden bg-rose-500 fill-rose-500 text-rose-500 ring-rose-500 stroke-rose-500" />
       </div>
     </DashboardLayout>
   );
 }
+
