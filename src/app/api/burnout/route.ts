@@ -78,13 +78,15 @@ export async function GET() {
       console.error("AI Summary generation failed:", e);
     }
 
+    const distribution = [
+      { name: 'Healthy', value: healthyCount, color: 'emerald' },
+      { name: 'At Risk (Medium)', value: mediumCount, color: 'amber' },
+      { name: 'Burnout (Critical)', value: criticalCount, color: 'rose' }
+    ].filter(d => d.value > 0);
+
     return NextResponse.json({
       summary: aiSummary,
-      distribution: [
-        { name: 'Healthy', value: healthyCount, color: 'emerald' },
-        { name: 'At Risk (Medium)', value: mediumCount, color: 'amber' },
-        { name: 'Burnout (Critical)', value: criticalCount, color: 'rose' }
-      ],
+      distribution,
       developers: results.sort((a, b) => b.score - a.score)
     });
   } catch (error) {
@@ -108,13 +110,15 @@ export async function GET() {
       };
     });
 
+    const fallbackDist = [
+      { name: 'Healthy', value: 2, color: 'emerald' },
+      { name: 'At Risk (Medium)', value: 1, color: 'amber' },
+      { name: 'Burnout (Critical)', value: 0, color: 'rose' }
+    ].filter(d => d.value > 0);
+
     return NextResponse.json({
       summary: "Database connection failed. Running in Actor System Demo Mode.",
-      distribution: [
-        { name: 'Healthy', value: 2, color: 'emerald' },
-        { name: 'At Risk (Medium)', value: 1, color: 'amber' },
-        { name: 'Burnout (Critical)', value: 0, color: 'rose' }
-      ],
+      distribution: fallbackDist,
       developers: mockResults.sort((a, b) => b.score - a.score)
     });
   }
