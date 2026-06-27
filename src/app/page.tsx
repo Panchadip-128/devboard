@@ -22,6 +22,8 @@ export default function LandingPage() {
           <Link href="#features" className="hover:text-white transition-colors">Features</Link>
           <Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
           <Link href="/incidents" className="hover:text-white transition-colors">Incidents</Link>
+          <Link href="/burnout" className="hover:text-white transition-colors">Burnout Radar</Link>
+          <Link href="/deployments" className="hover:text-white transition-colors">CI/CD</Link>
         </nav>
         <div>
           <Link href="/dashboard" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shadow-[0_0_20px_rgba(79,70,229,0.3)]">

@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { GoogleGenAI } from '@google/genai';
 import redis from '@/lib/redis';
+import { withLoadShedding } from '@/lib/withLoadShedding';
 
 // Initialize the Gemini client. It automatically picks up GEMINI_API_KEY from the environment.
 const ai = new GoogleGenAI({});
 
-export async function POST(
+export const POST = withLoadShedding(async (
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   try {
     const { id } = await params;
 
@@ -86,4 +87,4 @@ export async function POST(
     console.error('Failed to analyze incident:', error);
     return NextResponse.json({ error: 'Failed to generate root cause analysis' }, { status: 500 });
   }
-}
+});
