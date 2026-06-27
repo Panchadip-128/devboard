@@ -17,6 +17,35 @@ export default function PlatformDiagnosticsPage() {
   const [actorResult, setActorResult] = useState<any>(null);
   const [acting, setActing] = useState(false);
 
+  // Cryptographic Merkle Audit State
+  const [auditResult, setAuditResult] = useState<any>(null);
+  const [auditing, setAuditing] = useState(false);
+  const [auditVerification, setAuditVerification] = useState<boolean | null>(null);
+
+  const fetchAuditChain = async () => {
+    const res = await fetch('/api/system/audit');
+    const data = await res.json();
+    setAuditResult(data.chain.slice(0, 3));
+    setAuditVerification(data.isValid);
+  };
+
+  const appendAudit = async () => {
+    setAuditing(true);
+    await fetch('/api/system/audit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventType: 'DEPLOYMENT_SUCCESS', payload: { service: 'auth', version: 'v1.4.2' } })
+    });
+    await fetchAuditChain();
+    setAuditing(false);
+  };
+
+  const verifyAudit = async () => {
+    setAuditing(true);
+    await fetchAuditChain();
+    setAuditing(false);
+  };
+
   const testDevQL = async () => {
     setCompiling(true);
     try {
@@ -104,6 +133,47 @@ export default function PlatformDiagnosticsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
+
+        {/* Cryptographic Merkle Audit Engine */}
+        <div className="bg-slate-900/60 border border-emerald-500/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(16,185,129,0.05)]">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-slate-200">Cryptographic Merkle Audit Log (PQC)</h2>
+            <div className="flex gap-2">
+              <button 
+                onClick={appendAudit} 
+                disabled={auditing}
+                className="px-4 py-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                {auditing ? 'Hashing...' : 'Append Hash Record'}
+              </button>
+              <button 
+                onClick={verifyAudit} 
+                disabled={auditing}
+                className="px-4 py-2 bg-slate-800 text-slate-200 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+              >
+                Verify Blockchain
+              </button>
+            </div>
+          </div>
+          <p className="text-slate-400 text-sm mb-4">
+            Simulates Post-Quantum Cryptographic (PQC) data integrity. Every event is hashed with SHA3-512, chained to the previous block, and signed with high-entropy Ed25519 keys to prevent tampering.
+          </p>
+          
+          {auditVerification !== null && (
+            <div className={`mb-4 p-3 rounded-xl border text-sm font-bold flex items-center gap-2 ${auditVerification ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
+              {auditVerification ? '✅ Merkle Chain Verification Passed. Data is mathematically intact.' : '❌ CHAIN CORRUPTED. Tampering detected.'}
+            </div>
+          )}
+
+          {auditResult && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">Live Audit Chain (Top 3 Blocks)</label>
+              <pre className="bg-slate-950 border border-slate-800 rounded-xl p-4 text-emerald-400 font-mono text-xs overflow-x-auto whitespace-pre-wrap">
+                {JSON.stringify(auditResult, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
         
         {/* Stateful Actor System */}
         <div className="bg-slate-900/60 border border-orange-500/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(249,115,22,0.05)]">

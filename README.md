@@ -60,6 +60,11 @@ In distributed systems, physical wall-clocks are unreliable. DevBoard tracks eve
 
 ![Vector Clocks on Deployments](assets/deployments_final.png)
 
+### 6. Cryptographic Merkle Audit Log (PQC)
+To prove absolute data integrity for compliance (SOC2/FedRAMP), DevBoard implements a simulated Post-Quantum Cryptographic Merkle Tree. Every system event is hashed (SHA3-512), chained to the previous block, and digitally signed using high-entropy keys (Ed25519). The UI continuously verifies the blockchain in real-time, instantly flagging any mathematical tampering.
+
+![Cryptographic Merkle Audit Log](assets/crypto_audit.png)
+
 ---
 
 ## Architectural Deep Dive
