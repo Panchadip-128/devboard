@@ -16,6 +16,8 @@ model User {
   accounts      Account[]
   sessions      Session[]
   teams         TeamMember[]
+  settings      UserSettings?
+  apiKeys       ApiKey[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -194,4 +196,31 @@ model IncidentUpdate {
   createdAt  DateTime @default(now())
 
   incident   Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+}
+
+model UserSettings {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  firstName          String   @default("Demo")
+  lastName           String   @default("User")
+  theme              String   @default("dark")
+  twoFactorEnabled   Boolean  @default(true)
+  alertRouting       Json     @default("{\"Incident Creation (P1/P2)\": true, \"Deployment Success\": false, \"High CPU Utilization (>90%)\": true, \"DevQL Syntax Errors\": false}")
+  integrations       Json     @default("{\"GitHub Enterprise\": true, \"Slack\": false, \"Datadog\": false}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  tokenHash   String   @unique
+  tokenPrefix String   // First 12 chars to show in UI
+  userId      String
+  lastUsed    DateTime?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

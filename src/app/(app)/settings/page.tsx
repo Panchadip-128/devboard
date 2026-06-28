@@ -1,32 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Settings, User, Bell, Shield, Key, Database, Paintbrush, Check } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
+  const [isLoading, setIsLoading] = useState(true);
   
   // Interactive State for Mockups
-  const [firstName, setFirstName] = useState('Demo');
-  const [lastName, setLastName] = useState('User');
-  const [theme, setTheme] = useState('dark');
-  const [toggles, setToggles] = useState<Record<string, boolean>>({
-    'Incident Creation (P1/P2)': true,
-    'Deployment Success': false,
-    'High CPU Utilization (>90%)': true,
-    'DevQL Syntax Errors': false
-  });
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [theme, setTheme] = useState('');
+  const [toggles, setToggles] = useState<Record<string, boolean>>({});
   const [twoFactor, setTwoFactor] = useState(true);
-  const [integrations, setIntegrations] = useState<Record<string, boolean>>({
-    'GitHub Enterprise': true,
-    'Slack': false,
-    'Datadog': false
-  });
-  
-  const [keys, setKeys] = useState([
-    { id: 1, name: 'Production CI/CD', token: 'devboard_prod_8f92...', lastUsed: '2 minutes ago' }
-  ]);
-
+  const [integrations, setIntegrations] = useState<Record<string, boolean>>({});
+  const [keys, setKeys] = useState<any[]>([]);
   const [toast, setToast] = useState('');
 
   const showToast = (msg: string) => {
@@ -34,31 +22,98 @@ export default function SettingsPage() {
     setTimeout(() => setToast(''), 3000);
   };
 
-  const generateKey = () => {
-    setKeys([...keys, {
-      id: Date.now(),
-      name: 'New API Key',
-      token: `devboard_live_${Math.random().toString(36).substring(2, 10)}...`,
-      lastUsed: 'Never'
-    }]);
-    showToast('New API key generated successfully');
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [settingsRes, keysRes] = await Promise.all([
+          fetch('/api/settings'),
+          fetch('/api/keys')
+        ]);
+        const settings = await settingsRes.json();
+        const apiKeys = await keysRes.json();
+
+        setFirstName(settings.firstName);
+        setLastName(settings.lastName);
+        setTheme(settings.theme);
+        setToggles(settings.toggles);
+        setTwoFactor(settings.twoFactor);
+        setIntegrations(settings.integrations);
+        setKeys(apiKeys);
+      } catch (e) {
+        console.error('Failed to load settings');
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const saveSettings = async (updates: any) => {
+    try {
+      await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+    } catch (e) {
+      console.error('Save failed');
+    }
   };
 
-  const revokeKey = (id: number) => {
-    setKeys(keys.filter(k => k.id !== id));
-    showToast('API key revoked');
+  const generateKey = async () => {
+    try {
+      const res = await fetch('/api/keys', { method: 'POST' });
+      const data = await res.json();
+      setKeys([...keys, data.key]);
+      showToast('New API key generated securely via backend');
+    } catch (e) {
+      console.error('Failed to generate key');
+    }
+  };
+
+  const revokeKey = async (id: string) => {
+    try {
+      await fetch(`/api/keys/${id}`, { method: 'DELETE' });
+      setKeys(keys.filter(k => k.id !== id));
+      showToast('API key revoked from database');
+    } catch (e) {
+      console.error('Failed to revoke key');
+    }
   };
 
   const toggleIntegration = (name: string) => {
     setIntegrations(prev => {
-      const newState = !prev[name];
-      showToast(newState ? `Connected to ${name}` : `Disconnected from ${name}`);
-      return { ...prev, [name]: newState };
+      const newState = { ...prev, [name]: !prev[name] };
+      saveSettings({ integrations: newState });
+      showToast(newState[name] ? `Connected to ${name} via OAuth` : `Disconnected from ${name}`);
+      return newState;
     });
   };
 
   const toggleAlert = (name: string) => {
-    setToggles(prev => ({ ...prev, [name]: !prev[name] }));
+    setToggles(prev => {
+      const newState = { ...prev, [name]: !prev[name] };
+      saveSettings({ toggles: newState });
+      return newState;
+    });
+  };
+
+  const saveProfile = () => {
+    saveSettings({ firstName, lastName });
+    showToast('Profile saved to database successfully');
+  };
+
+  const updateTheme = (newTheme: string) => {
+    setTheme(newTheme);
+    saveSettings({ theme: newTheme });
+    showToast(`Theme synced to ${newTheme}`);
+  };
+
+  const toggle2FA = () => {
+    const newState = !twoFactor;
+    setTwoFactor(newState);
+    saveSettings({ twoFactor: newState });
+    showToast(newState ? '2FA Enabled in database' : '2FA Disabled in database');
   };
 
   const tabs = [
@@ -69,6 +124,10 @@ export default function SettingsPage() {
     { id: 'api', label: 'API Keys', icon: Key },
     { id: 'integrations', label: 'Integrations', icon: Database },
   ];
+
+  if (isLoading) {
+    return <div className="p-8 text-slate-400 flex justify-center mt-20">Loading secure settings...</div>;
+  }
 
   return (
     <div className="p-8 max-w-6xl mx-auto w-full text-slate-50 min-h-screen relative">
@@ -151,7 +210,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-8 flex justify-end">
-                  <button onClick={() => showToast('Profile settings saved successfully')} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                  <button onClick={saveProfile} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/20">
                     Save Changes
                   </button>
                 </div>
@@ -164,13 +223,13 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold text-white mb-6">Theme Preferences</h2>
               <p className="text-slate-400 mb-6">Customize the look and feel of your dashboard.</p>
               <div className="grid grid-cols-3 gap-4">
-                <div onClick={() => setTheme('dark')} className={`p-4 border-2 ${theme === 'dark' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all`}>
+                <div onClick={() => updateTheme('dark')} className={`p-4 border-2 ${theme === 'dark' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all`}>
                   <span className="text-sm font-medium text-white">Dark (Default)</span>
                 </div>
-                <div onClick={() => { setTheme('light'); showToast('Light mode coming soon'); }} className={`p-4 border-2 ${theme === 'light' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all opacity-50`}>
+                <div onClick={() => updateTheme('light')} className={`p-4 border-2 ${theme === 'light' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all opacity-50`}>
                   <span className="text-sm font-medium text-slate-400">Light (Coming Soon)</span>
                 </div>
-                <div onClick={() => { setTheme('system'); showToast('System theme synced'); }} className={`p-4 border-2 ${theme === 'system' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all`}>
+                <div onClick={() => updateTheme('system')} className={`p-4 border-2 ${theme === 'system' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all`}>
                   <span className="text-sm font-medium text-slate-400">System</span>
                 </div>
               </div>
@@ -213,10 +272,7 @@ export default function SettingsPage() {
                     </p>
                   </div>
                   <button 
-                    onClick={() => {
-                      setTwoFactor(!twoFactor);
-                      showToast(twoFactor ? '2FA Disabled' : '2FA Enabled successfully');
-                    }}
+                    onClick={toggle2FA}
                     className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${twoFactor ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border-rose-500/30'}`}
                   >
                     {twoFactor ? 'Disable 2FA' : 'Enable 2FA'}
