@@ -6,8 +6,7 @@ import { GoogleGenAI } from '@google/genai';
 const ai = new GoogleGenAI({});
 
 export async function GET() {
-  try {
-    // Get unique authors who have committed in the last 30 days
+  // Get unique authors who have committed in the last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -89,37 +88,4 @@ export async function GET() {
       distribution,
       developers: results.sort((a, b) => b.score - a.score)
     });
-  } catch (error) {
-    console.warn('Database offline. Falling back to Demo Mode for Burnout Radar:', error);
-    
-    // Demo Mock Fallback
-    const { ActorSystem } = await import('@/lib/actor/ActorSystem');
-    const system = ActorSystem.getInstance();
-    
-    // Initialize mock actors
-    const mockDevs = ['alice', 'bob', 'charlie'];
-    const mockResults = mockDevs.map(devId => {
-      const actor = system.getOrCreateDeveloper(devId);
-      const actorState = actor.getSnapshot();
-      return {
-        authorId: devId,
-        risk: actorState.burnoutScore > 20 ? 'HIGH' : 'LOW',
-        score: actorState.burnoutScore + 10,
-        metrics: { weekendRatio: '12%', lateNightRatio: '5%' },
-        actorState: actorState
-      };
-    });
-
-    const fallbackDist = [
-      { name: 'Healthy', value: 2, color: 'emerald' },
-      { name: 'At Risk (Medium)', value: 1, color: 'amber' },
-      { name: 'Burnout (Critical)', value: 0, color: 'rose' }
-    ].filter(d => d.value > 0);
-
-    return NextResponse.json({
-      summary: "Database connection failed. Running in Actor System Demo Mode.",
-      distribution: fallbackDist,
-      developers: mockResults.sort((a, b) => b.score - a.score)
-    });
-  }
 }
