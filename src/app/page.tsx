@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Activity, ShieldAlert, Users, Network } from 'lucide-react';
+import { ArrowRight, Activity, ShieldAlert, Users, Network, Braces } from 'lucide-react';
 
 export default function LandingPage() {
   return (

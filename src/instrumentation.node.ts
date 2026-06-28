@@ -32,8 +32,8 @@ if (!(global as any)[globalSymbol]) {
 
   // Boot the background worker thread.
   try {
-    // In dev mode, we catch initialization errors if the TS file isn't pre-compiled to JS.
-    const workerPath = path.resolve(__dirname, './workers/telemetryWorker.js');
+    // We point to the pre-compiled worker built by tsc during build step
+    const workerPath = path.resolve(process.cwd(), 'dist/workers/telemetryWorker.js');
     const worker = new Worker(workerPath, { workerData: { sharedBuffer } });
     worker.on('error', (err) => console.error('[Telemetry Worker Error]', err));
     worker.on('exit', (code) => console.log(`[Telemetry Worker] exited with code ${code}`));

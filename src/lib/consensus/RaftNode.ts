@@ -86,18 +86,34 @@ export class RaftNode {
     
     this.resetElectionTimer();
     
-    // Simulate gathering votes from peers via network RPC
     let votes = 1; // Vote for self
     
-    /* 
-    // In production, we'd use Promise.all to fetch('/api/system/raft', RequestVote)
-    const responses = await Promise.all(this.peers.map(peer => fetch(peer)));
-    votes += responses.filter(r => r.voteGranted).length;
-    */
-
-    // For local prototype simulation, we simulate winning the election if we have peers
+    // Simulate gathering votes from peers via network RPC
     if (this.peers.length > 0) {
-      votes += Math.floor(this.peers.length / 2) + 1; // Simulate majority
+      const votePromises = this.peers.map(async (peerUrl) => {
+        try {
+          const res = await fetch(`${peerUrl}/api/system/raft`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'RequestVote',
+              term: this.currentTerm,
+              candidateId: this.id
+            }),
+            signal: AbortSignal.timeout(100) // Fast timeout for RPC
+          });
+          if (res.ok) {
+            const data = await res.json();
+            return data.voteGranted ? 1 : 0;
+          }
+        } catch (e) {
+          // Peer offline or network error, count as 0 votes
+        }
+        return 0;
+      });
+
+      const results = await Promise.all(votePromises);
+      votes += results.reduce((acc: number, v: number) => acc + v, 0);
     }
 
     const majority = Math.floor((this.peers.length + 1) / 2) + 1;
@@ -123,6 +139,22 @@ export class RaftNode {
     if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
     this.heartbeatTimer = setInterval(() => {
       // Broadcast AppendEntries RPC to all peers to assert dominance
+      this.peers.forEach(async (peerUrl) => {
+        try {
+          await fetch(`${peerUrl}/api/system/raft`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'AppendEntries',
+              term: this.currentTerm,
+              leaderId: this.id
+            }),
+            signal: AbortSignal.timeout(50) 
+          });
+        } catch (e) {
+          // Ignore failed heartbeats
+        }
+      });
     }, 50); // 50ms heartbeat interval
   }
 

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "tsc src/workers/telemetryWorker.ts --outDir dist/workers --esModuleInterop && next build",
     "start": "next start",
     "lint": "eslint",
     "webhook:tunnel": "node scripts/webhook-proxy.js",

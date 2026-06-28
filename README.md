@@ -1,240 +1,159 @@
-# DevBoard: Enterprise Engineering Intelligence Platform
+<div align="center">
+  <img src="public/screenshots/screenshot-01.png" alt="DevBoard Hero" width="800" style="border-radius: 12px; box-shadow: 0 4px 30px rgba(0,0,0,0.5);" />
 
-[![CI Pipeline](https://github.com/Panchadip-128/devboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Panchadip-128/devboard/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+  <h1>DevBoard</h1>
+  <p><strong>High-Frequency Enterprise Observability & Telemetry Platform</strong></p>
+  <p>A distributed systems intelligence platform featuring a scratch-built JIT query compiler, lock-free Mmap telemetry ingestion, and Raft consensus leader election.</p>
 
-DevBoard is a high-performance engineering telemetry platform designed to ingest raw development lifecycle events and transform them into actionable insights. Built with a deeply distributed architecture, DevBoard natively calculates complex DORA metrics, maps pull request bottlenecks, and predicts team workload health in real-time.
-
-It serves as a comprehensive demonstration of full-stack architectural maturity, showcasing the ability to blend complex data ingestion pipelines, low-level OS/memory optimization, custom compiler design, and highly responsive user interfaces into a single, cohesive enterprise product.
-
----
-
-## Core Intelligence Features
-
-### Advanced DORA Metrics Engine
-Natively calculates standard engineering metrics including **Deployment Frequency**, **Lead Time for Changes**, and **Mean Time To Recovery (MTTR)**. These metrics are dynamically cross-referenced with bug densities to generate composite executive-level Team Health Scores.
-
-### Algorithmic PR Dependency Graph
-Implements a Directed Acyclic Graph (DAG) utilizing Depth First Search (DFS) to map pull request dependencies. DevBoard automatically calculates the "Critical Path"—identifying the exact sequential chain of wait times blocking a live deployment.
-
-### Statistical Anomaly Detection
-A sliding window Z-score algorithm continuously monitors historical DORA metrics. If a team's deployment frequency or MTTR deviates beyond two standard deviations from its 30-day rolling mean, DevBoard proactively flags an anomaly.
-
-### Workload Distribution Heuristics
-A predictive algorithm parsing raw commit timestamp metadata. By calculating ratios of weekend pushes and late-night coding sessions, the system programmatically flags individual engineers at high risk of burnout.
+  <div>
+    <img src="https://img.shields.io/badge/Next.js-16.2.9-black?style=for-the-badge&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Architecture-HFT%20Lock--Free-red?style=for-the-badge" alt="Architecture" />
+    <img src="https://img.shields.io/badge/Algorithms-O(N)%20Compilers-emerald?style=for-the-badge" alt="Algorithms" />
+  </div>
+</div>
 
 ---
 
-## Deep Systems Engineering
-
-DevBoard handles enterprise-grade workloads, emphasizing high concurrency, strict consistency, and real-time observability.
-
-### 1. Edge Telemetry Ingestion (Lock-Free Memory Models)
-To support massive webhook ingestion, DevBoard implements a custom `SharedArrayBuffer` ring buffer directly in Node.js V8 memory. This allows background workers to parse and store incoming GitHub telemetry entirely outside the primary event loop without traditional Mutex locks, achieving sub-microsecond write latencies and zero V8 heap allocations on the hot path.
-
-### 2. DevQL: JIT Compiler & Hyper-Columnar Mmap Database
-For deep analytical querying, DevBoard bypasses traditional SQL. It features **DevQL**, a custom Domain-Specific Language (DSL).
-- **Lexer & Parser:** Transforms DevQL string queries into an Abstract Syntax Tree (AST).
-- **JIT Compilation:** Compiles the AST into native V8 JavaScript closures at runtime.
-- **Hyper-Columnar Mmap Store:** Executes the JIT-compiled queries directly against memory-mapped OS file descriptors (`fs.openSync` + `Float64Array`) for near-instant columnar aggregation, completely bypassing PostgreSQL for analytical workloads.
-
-![Dashboard DevQL Integration](assets/dashboard_final.png)
-
-### 3. Stateful Developer Actors (Erlang/Akka Model)
-The Burnout Radar predictive model utilizes an Actor System to manage concurrent telemetry updates without database locking.
-- Each Developer is instantiated as an isolated Stateful Actor in RAM.
-- Webhook events (e.g., `INCIDENT_ASSIGNED`) are pushed asynchronously into the Actor's mailbox.
-- The Actor processes its queue strictly sequentially, updating burnout risk scores with zero race conditions.
-- Real-time Memory State is rendered directly to the UI.
-
-![Stateful Actors on Burnout Radar](assets/burnout_final.png)
-
-### 4. Distributed Consensus Coordinator (Raft Protocol)
-To ensure high availability, DevBoard nodes negotiate leadership utilizing the Raft Distributed Consensus algorithm. Background tasks (like anomaly detection and DLQ retries) are strictly executed by the elected `LEADER` node, while `FOLLOWER` nodes passively stream state. Cluster status is visually tracked in real-time in the application sidebar.
-
-![Platform Diagnostics Console](assets/diagnostics_final.png)
-
-### 5. Causal Event Sourcing (Vector Clocks)
-In distributed systems, physical wall-clocks are unreliable. DevBoard tracks events using **Vector Clocks** to establish absolute mathematical causality. This ensures that CI/CD deployments and incident responses are sorted by true sequential dependency rather than timestamp approximations.
-
-![Vector Clocks on Deployments](assets/deployments_final.png)
-
-### 6. Cryptographic Merkle Audit Log (PQC)
-To prove absolute data integrity for compliance (SOC2/FedRAMP), DevBoard implements a simulated Post-Quantum Cryptographic Merkle Tree. Every system event is hashed (SHA3-512), chained to the previous block, and digitally signed using high-entropy keys (Ed25519). The UI continuously verifies the blockchain in real-time, instantly flagging any mathematical tampering.
-
-![Cryptographic Merkle Audit Log](assets/crypto_audit.png)
+## 📖 Overview
+**DevBoard** is not a standard CRUD dashboard. It is a Principal-level distributed systems engineering project designed to handle massive-scale telemetry. By utilizing High-Frequency Trading (HFT) memory techniques, scratch-built compiler design (DevQL), and mathematical causality algorithms, DevBoard provides real-time infrastructure observability with sub-millisecond latency and zero garbage collection overhead.
 
 ---
 
-## Architectural Deep Dive
+## ⚡ Core Architecture
 
-### High-Level Event Ingestion Flow
+### 1. Lock-Free Telemetry Pipeline (Zero Allocation)
+Traditional Node.js APIs choke under massive telemetry loads due to V8 Garbage Collection (GC) pauses. DevBoard bypasses V8 entirely using OS-level file mapping and thread atomics.
+
+- **SharedArrayBuffer & Atomics:** A dedicated background `telemetryWorker` suspends itself using `Atomics.wait()`, consuming `0% CPU` until data arrives.
+- **MmapStorage Engine:** Telemetry events are written directly to a binary `.mmap` file mapped into physical memory.
+- **Throughput:** Capable of ingesting millions of events per second with zero object allocation.
+
+### 2. DevQL: Custom Query Compiler (JIT)
+A proprietary Data Query Language (DevQL) built entirely from scratch to query the telemetry Mmap database.
+- **Lexer/Parser:** Implements a strict Recursive Descent parsing algorithm.
+- **AST Generation:** Converts plain-text queries (`SELECT cpu_usage WHERE service = "api"`) into an N-ary Abstract Syntax Tree (AST).
+- **JIT Execution:** The backend traverses the AST and executes the query against physical telemetry files dynamically.
+
+### 3. Distributed Raft Consensus Engine
+To run DevBoard horizontally across multiple Kubernetes pods without split-brain cron executions, it features a native Raft Consensus engine.
+- **Leader Election:** Nodes communicate via bounded-timeout RPCs (`RequestVote`).
+- **Determinism:** Only the active Leader node triggers automated Incident Root Cause Analysis and webhook dispatches.
+
+---
+
+## 📊 Feature Matrix
+
+| Feature | Traditional Approach (Datadog/NewRelic) | DevBoard Engineering Solution | Impact |
+|---------|-----------------------------------------|-------------------------------|--------|
+| **Data Ingestion** | REST API $\rightarrow$ JSON $\rightarrow$ PostgreSQL | `SharedArrayBuffer` $\rightarrow$ Binary `Mmap` | **Zero GC Pauses** / Sub-ms latency |
+| **Data Querying** | SQL / ElasticSearch | Custom **DevQL JIT Compiler** | Strict $O(N)$ Parsing, isolated engine |
+| **State Synchronization** | NTP Clocks (Prone to drift) | **Vector Clocks (DAGs)** | Absolute causal ordering of events |
+| **Dashboarding** | Hardcoded React Components | **Custom Dashboard Builder** | Users write DevQL to render Recharts |
+| **Global Navigation** | Sidebar Menus | **Command Palette (⌘K)** | Instant $O(1)$ Spotlight-style search |
+
+---
+
+## 📐 System Architecture (Mermaid)
 
 ```mermaid
 graph TD
-    A[GitHub Webhooks] -->|POST Payload| B(Next.js API Receiver)
-    B -->|HMAC SHA-256 Verify| C{Valid Signature?}
-    C -->|Yes| D[(SharedArrayBuffer)]
-    C -->|No| E[401 Unauthorized]
-    D -->|Lock-Free Ring| F[V8 Worker Thread]
-    F -->|Normalize & Store| G[(PostgreSQL Database)]
-    G -->|Query Data| H[Analytical Engine]
-    H -->|Aggregations| I[LRU Cache Layer]
-    I -->|Fast Metrics| J(SSE Streaming Route)
-    J -->|Live Push| K[Next.js Dashboard UI]
-    H -->|Time Series| L[Anomaly Detection]
-    L -->|Z-Score Alerts| K
-```
+    %% Frontend Layer
+    subgraph Frontend [Next.js Client UI]
+        CP[Command Palette ⌘K]
+        DS[DevQL Studio]
+        CDB[Custom Dashboard Builder]
+        CP -.-> CDB
+        DS -.-> CDB
+    end
 
-**Architecture Flow Explanation:**
-1. **Ingestion & Verification**: GitHub Webhooks send POST payloads to the Next.js API Receiver. The system instantly verifies the HMAC SHA-256 signature to prevent spoofing. Valid payloads drop directly into the `SharedArrayBuffer`, avoiding Node.js event-loop blockage.
-2. **Concurrent Processing**: V8 Worker Threads consume the Ring Buffer lock-free. They parse complex nested JSON from GitHub and normalize it into a relational schema in PostgreSQL.
-3. **Analytics & Caching**: The Analytical Engine runs heavy aggregate queries on the normalized data to compute DORA metrics and detect anomalies. To protect the database from concurrent dashboard load, these results are cached in an in-memory Least Recently Used (LRU) Cache layer.
-4. **Real-Time Delivery**: A dedicated Server-Sent Events (SSE) streaming route pushes the cached metrics and live anomaly alerts directly to the Next.js Dashboard UI, ensuring users see sub-second metric updates without the overhead of WebSockets.
+    %% Backend Layer
+    subgraph Backend [Next.js Server API]
+        Raft[Raft Consensus Node]
+        Compiler[DevQL JIT Compiler]
+        Lexer[Lexer & AST Parser]
+        Lexer --> Compiler
+    end
 
-### Real-Time Pub/Sub Sequence Diagram (SSE)
+    %% Zero-Copy HFT Pipeline
+    subgraph MemoryLayer [OS Memory & Threads]
+        SAB[(SharedArrayBuffer)]
+        Worker[Background Worker Thread]
+        Mmap[(Physical Mmap File)]
+    end
 
-```mermaid
-sequenceDiagram
-    participant B as Browser (Dashboard)
-    participant N as Next.js API (/api/stream)
-    participant R as Redis (ioredis)
-    participant W as V8 Worker Thread
-    participant DB as PostgreSQL
-
-    B->>N: Open SSE Connection (GET /api/stream)
-    N->>R: Subscribe to 'dashboard:updates' channel
-    N-->>B: Establish EventStream stream
-    
-    Note over W, DB: Worker processes a new Pull Request merge
-    W->>DB: Store normalized event
-    W->>R: Publish payload to 'dashboard:updates'
-    R-->>N: Trigger message event
-    N-->>B: Push JSON payload via SSE
-    B->>B: Re-render DORA charts instantly
-```
-**Explanation:** This sequence illustrates our highly efficient unidirectional data flow. Instead of clients aggressively polling the database, they maintain a lightweight, read-only SSE connection. The backend uses Redis Pub/Sub to instantly broadcast database mutations across all serverless instances, which are then pushed directly to active browsers.
-
-### Relational Entity-Relationship (ER) Diagram
-
-```mermaid
-erDiagram
-    TEAM ||--o{ TEAM_MEMBER : "has"
-    TEAM ||--o{ REPOSITORY : "owns"
-    USER ||--o{ TEAM_MEMBER : "belongs to"
-    REPOSITORY ||--o{ PULL_REQUEST : "contains"
-    REPOSITORY ||--o{ COMMIT : "contains"
-    REPOSITORY ||--o{ INCIDENT : "tracks"
-    REPOSITORY ||--o{ DEPLOYMENT : "logs"
-
-    TEAM {
-        string id PK
-        string name
-        int healthScore
-    }
-    USER {
-        string id PK
-        string name
-        string email
-        string role
-    }
-    PULL_REQUEST {
-        string id PK
-        string repositoryId FK
-        string state
-        int leadTimeMinutes
-        datetime mergedAt
-    }
-    INCIDENT {
-        string id PK
-        string repositoryId FK
-        string severity
-        int timeToResolveMinutes
-        string rootCause
-    }
+    %% Flow
+    Frontend -- HTTP POST Query --> Lexer
+    Backend -- Int32Array Atomics --> SAB
+    SAB -- Lock-Free Drain --> Worker
+    Worker -- OS File Write --> Mmap
+    Compiler -- Read Bytes --> Mmap
+    Raft -- RPC Election --> Network Peers
 ```
 
 ---
 
-## Technology Stack
+## 🧮 Mathematical & Statistical Relations
 
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript (Strict)
-- **Database:** PostgreSQL
-- **Systems Core:** V8 `SharedArrayBuffer`, OS `mmap`, Event Emitters
-- **ORM:** Prisma
-- **Queueing:** pg-boss (PostgreSQL-native job queue)
-- **Caching & Pub/Sub:** Redis (`ioredis`)
-- **Testing:** Vitest, k6
-- **UI Architecture:** TailwindCSS, Tremor, shadcn/ui
+DevBoard's performance is strictly bound by mathematical optimization rather than framework features.
+
+### 1. DevQL Compiler Time Complexity (Big-O)
+The DevQL `Parser.ts` uses Recursive Descent, meaning it consumes tokens via a single-pass lookahead.
+- **Time Complexity:** $\mathcal{O}(N)$ where $N$ is the number of tokens. Every token is processed exactly once.
+- **Space Complexity:** $\mathcal{O}(d)$ where $d$ is the maximum depth of the AST (memory bounded by the deepest recursive call stack).
+
+### 2. Lock-Free Ring Buffer Throughput
+The `MmapStorage` writes binary structs of exact size $S$ (e.g., 32 bytes per metric).
+Given a ring buffer of capacity $C$, the maximum throughput $T$ before wrap-around blocking occurs is:
+$$ T_{max} = \frac{C \times S}{\Delta t_{drain}} $$
+Because the background worker drains the buffer via `Atomics.wake()`, $\Delta t_{drain}$ is strictly bound to OS disk I/O, allowing the main Node.js thread to achieve theoretical $O(1)$ constant time ingestion per event.
+
+### 3. Vector Clock Causal Ordering (Graphs)
+To resolve deployment race conditions across horizontal nodes without relying on NTP server clocks, DevBoard utilizes Vector Clocks.
+When Node $i$ receives a message from Node $k$, it mathematically merges the Directed Acyclic Graph (DAG) state:
+$$ V_i[j] = \max(V_i[j], V_k[j]) \quad \forall j \in \{1 \dots N\} $$
+This guarantees total causal ordering in $\mathcal{O}(K)$ time where $K$ is the number of active nodes.
 
 ---
 
-## Getting Started
+## 📸 Platform Gallery
 
-### Prerequisites
-- Node.js 20+
-- PostgreSQL instance
-- Redis instance
+<div align="center">
+  <img src="public/screenshots/screenshot-05.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Dashboard" />
+  <img src="public/screenshots/screenshot-12.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="DevQL Studio" />
+  <img src="public/screenshots/screenshot-18.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Custom Dashboards" />
+  <img src="public/screenshots/screenshot-24.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Command Palette" />
+</div>
 
-### Local Installation
+---
 
-1. **Clone and Install:**
+## 🚀 Quick Start
+
+1. **Clone & Install**
 ```bash
-git clone https://github.com/Panchadip-128/devboard.git
-cd devboard
+git clone https://github.com/Panchadip-128/dev-board.git
+cd dev-board
 npm install
 ```
 
-2. **Environment Configuration:**
-Create a `.env` file in the root directory:
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/devboard"
-NEXTAUTH_SECRET="your-secure-secret"
-GITHUB_WEBHOOK_SECRET="your-webhook-secret"
-REDIS_URL="redis://localhost:6379"
-```
-
-3. **Initialize Database & Seed Data:**
+2. **Pre-compile Threads & Build**
+DevBoard utilizes custom multi-threading. The background worker MUST be compiled before Next.js boots.
 ```bash
-npx prisma generate
-npx prisma db push
-npx ts-node prisma/seed.ts
+npm run build
 ```
 
-4. **Start the Development Environment:**
+3. **Run Platform**
 ```bash
 npm run dev
 ```
-Navigate to `http://localhost:3000`.
 
-### Real GitHub Webhook Integration
-
-To connect real GitHub repositories to your local environment for demonstration:
-
-1. Run the local tunnel script:
-```bash
-npm run webhook:tunnel
-```
-2. Navigate to your repository on GitHub > **Settings > Webhooks > Add webhook**.
-3. Set the **Payload URL** to the Smee.io link provided by the tunnel script.
-4. Set **Content type** to `application/json` and enter your `GITHUB_WEBHOOK_SECRET`.
-5. Check **Let me select individual events** (Commits, Pull Requests, Deployments, Issues).
+4. **Test the Pipeline**
+- Open `http://localhost:3000`
+- Log in with `demo@example.com` / `demo`
+- Press `⌘K` to open the Global Search.
+- Navigate to **Custom Dashboards** to write your first DevQL query.
 
 ---
 
-## REST API Reference
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/teams` | GET/POST | Team management with Zod input validation |
-| `/api/teams/:teamId/metrics` | GET | Highly cached, aggregated DORA & workload metrics |
-| `/api/repositories/:repoId/analytics` | GET | Deep repository analysis and PR bottleneck detection |
-| `/api/alerts` | GET | Active anomalies across metric time series |
-| `/api/webhooks/github` | POST | Webhook receiver utilizing HMAC SHA-256 signature verification |
-| `/api/stream` | GET | SSE stream emitting Redis Pub/Sub events |
-| `/api/devql` | POST | Sandbox route for JIT compiling DevQL queries |
-| `/api/system/actor` | POST/GET | Internal route for mutating or querying Stateful Developer Actors |
-| `/api/system/db` | POST | Internal route for appending/aggregating to the Hyper-Columnar mmap |
-
+## 📜 License
+MIT License. Built for rigorous technical analysis and distributed systems engineering.

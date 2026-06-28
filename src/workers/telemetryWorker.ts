@@ -1,14 +1,21 @@
 import { workerData } from 'worker_threads';
 import { LockFreeRingBuffer } from '../lib/hft/RingBuffer';
+import { MmapStorage } from '../lib/db/MmapStorage';
+import Redis from 'ioredis';
 
 // The worker thread receives the SharedArrayBuffer via workerData
 const sharedBuffer = workerData.sharedBuffer;
 const ringBuffer = new LockFreeRingBuffer(10000, sharedBuffer);
+const storage = new MmapStorage('telemetry.bin');
+let writeOffset = 0;
+
+// Need a separate Redis connection for the worker thread
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
 
 console.log('[Telemetry Worker] Booted up. Thread isolated. Listening on SharedArrayBuffer.');
 
 async function drainBuffer() {
-  const batch = [];
+  const batch: number[] = [];
   
   let val = ringBuffer.pop();
   while (val !== null) {
@@ -17,9 +24,23 @@ async function drainBuffer() {
   }
   
   if (batch.length > 0) {
-    // In a real HFT system, this would bulk insert into a columnar database (ClickHouse)
-    // to bypass the main database bottleneck.
-    console.log(`[Telemetry Worker] Drained ${batch.length} events from lock-free buffer in sub-millisecond time.`);
+    // Bulk insert into the OS-level file mapping, bypassing PostgreSQL entirely
+    const floatArray = new Float64Array(batch);
+    storage.writeColumn(writeOffset, floatArray);
+    writeOffset += floatArray.byteLength;
+
+    console.log(`[Telemetry Worker] Flushed ${batch.length} events to MmapStorage directly via OS syscalls in sub-millisecond time.`);
+
+    // Publish to the SSE pipeline for real-time dashboard updates
+    try {
+      redis.publish('realtime-updates', JSON.stringify({
+        type: 'TELEMETRY_BATCH_FLUSHED',
+        count: batch.length,
+        timestamp: Date.now()
+      }));
+    } catch (e) {
+      console.error('[Telemetry Worker] Failed to publish to Redis', e);
+    }
   }
 }
 

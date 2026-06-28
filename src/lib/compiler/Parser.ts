@@ -21,6 +21,11 @@ export interface SelectAST extends ASTNode {
  * Phase 4: Recursive Descent Parser.
  * Consumes the Lexical Tokens and builds an Abstract Syntax Tree (AST) 
  * representing the DevQL logical structure.
+ * 
+ * INTERVIEW NOTE - Algorithmic Complexity:
+ * - Time Complexity: O(N) where N is the number of tokens. Each token is visited exactly once.
+ * - Space Complexity: O(N) for the AST construction in the worst case (e.g. deeply nested conditions) 
+ *   due to the recursion call stack and object allocation.
  */
 export class Parser {
   private tokens: Token[];
@@ -30,6 +35,10 @@ export class Parser {
     this.tokens = tokens;
   }
 
+  /**
+   * Parses the token array into a SelectAST using recursive descent.
+   * Time: O(N), Space: O(N)
+   */
   public parse(): SelectAST {
     this.consume(TokenType.KEYWORD, 'SELECT');
     
