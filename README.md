@@ -132,6 +132,7 @@ stateDiagram-v2
     Mmap_Disk --> Recharts_JSON: Transformation
     Recharts_JSON --> [*]: Client Render
 ```
+**Purpose & Solution:** Maps the transformation of a raw DevQL string into execution blocks. This proves the system avoids monolithic SQL overhead by implementing an isolated, strict $O(N)$ parser that compiles directly down to memory mapped file reads, guaranteeing deterministic execution times.
 
 ### B. Distributed Raft Consensus Sequence
 This demonstrates how DevBoard synchronizes state across horizontal multi-tenant environments.
@@ -154,6 +155,7 @@ sequenceDiagram
     NodeB->>NodeA: RPC: AppendEntries (Heartbeat)
     NodeB->>NodeC: RPC: AppendEntries (Heartbeat)
 ```
+**Purpose & Solution:** Details the network RPC flow during a leader election. It solves the critical "Split-Brain" problem in distributed systems—ensuring that even if deployed across 50 Kubernetes pods, exactly *one* node triggers chron jobs and webhooks without double-firing.
 
 ### C. Incident & Telemetry Entity-Relationship (Wireframe)
 Database relations used for predicting burnout and tracking developer velocity.
@@ -178,6 +180,7 @@ erDiagram
         int logical_time
     }
 ```
+**Purpose & Solution:** Illustrates the data wireframe connecting raw infrastructure events to developer incidents. By embedding `VECTOR_CLOCK` logical timestamps into incidents, the system solves causality race conditions, guaranteeing that incident resolutions are processed in the exact order they occurred regardless of network latency.
 
 ---
 
@@ -187,22 +190,27 @@ erDiagram
   <h3>Authentication & Navigation</h3>
   <img src="public/screenshots/screenshot-01.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Login Flow" />
   <img src="public/screenshots/screenshot-04.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Main Dashboard Navigation" />
+  <p align="left"><em><strong>Purpose & Solution:</strong> Provides a secure, NextAuth-protected entry point. The global dashboard acts as a unified hub, solving the "tool fatigue" problem by centralizing all infrastructure observability into one cohesive, multi-directional platform.</em></p>
   
   <h3>Enterprise Global Search (⌘K)</h3>
   <img src="public/screenshots/screenshot-07.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Command Palette Activation" />
   <img src="public/screenshots/screenshot-09.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Cross-Module Searching" />
+  <p align="left"><em><strong>Purpose & Solution:</strong> A centralized Command Palette (⌘K) that searches through active incidents, users, and queries in $O(1)$ time. This solves navigational latency for power users, mirroring the efficiency of Spotlight/Raycast.</em></p>
 
   <h3>DevQL JIT Compiler & Studio</h3>
   <img src="public/screenshots/screenshot-11.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="DevQL Studio IDE" />
   <img src="public/screenshots/screenshot-13.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="AST Generation & Execution" />
+  <p align="left"><em><strong>Purpose & Solution:</strong> A fully custom in-browser IDE for querying memory-mapped telemetry. It visually exposes the underlying Abstract Syntax Tree (AST), proving the legitimacy of the proprietary query engine while bypassing standard SQL database constraints.</em></p>
 
   <h3>Custom Dashboard Builder</h3>
   <img src="public/screenshots/screenshot-15.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Empty Widget Grid" />
   <img src="public/screenshots/screenshot-18.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="DevQL Chart Rendering" />
+  <p align="left"><em><strong>Purpose & Solution:</strong> Allows teams to build highly customized observability widgets. By injecting raw DevQL queries directly into Recharts visualizations, it solves the problem of rigid, hardcoded UI components.</em></p>
 
   <h3>Incident & Team Analytics</h3>
   <img src="public/screenshots/screenshot-20.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Incident RCA" />
   <img src="public/screenshots/screenshot-25.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Team Contributor Metrics" />
+  <p align="left"><em><strong>Purpose & Solution:</strong> Integrates Gemini AI for automated Root Cause Analysis (RCA) and tracks team velocity/burnout. This elevates the platform from standard telemetry tracking into predictive organizational intelligence.</em></p>
 </div>
 
 ---
