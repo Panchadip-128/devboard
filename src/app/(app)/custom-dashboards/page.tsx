@@ -42,7 +42,7 @@ export default function CustomDashboardsPage() {
   };
 
   const updateWidget = (id: string, key: keyof Widget, value: any) => {
-    setWidgets(widgets.map(w => w.id === id ? { ...w, [key]: value } : w));
+    setWidgets(prev => prev.map(w => w.id === id ? { ...w, [key]: value } : w));
   };
 
   const runQuery = async (id: string) => {
