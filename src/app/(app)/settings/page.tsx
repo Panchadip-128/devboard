@@ -1,10 +1,65 @@
 'use client';
 
 import { useState } from 'react';
-import { Settings, User, Bell, Shield, Key, Database, Paintbrush } from 'lucide-react';
+import { Settings, User, Bell, Shield, Key, Database, Paintbrush, Check } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
+  
+  // Interactive State for Mockups
+  const [firstName, setFirstName] = useState('Demo');
+  const [lastName, setLastName] = useState('User');
+  const [theme, setTheme] = useState('dark');
+  const [toggles, setToggles] = useState<Record<string, boolean>>({
+    'Incident Creation (P1/P2)': true,
+    'Deployment Success': false,
+    'High CPU Utilization (>90%)': true,
+    'DevQL Syntax Errors': false
+  });
+  const [twoFactor, setTwoFactor] = useState(true);
+  const [integrations, setIntegrations] = useState<Record<string, boolean>>({
+    'GitHub Enterprise': true,
+    'Slack': false,
+    'Datadog': false
+  });
+  
+  const [keys, setKeys] = useState([
+    { id: 1, name: 'Production CI/CD', token: 'devboard_prod_8f92...', lastUsed: '2 minutes ago' }
+  ]);
+
+  const [toast, setToast] = useState('');
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(''), 3000);
+  };
+
+  const generateKey = () => {
+    setKeys([...keys, {
+      id: Date.now(),
+      name: 'New API Key',
+      token: `devboard_live_${Math.random().toString(36).substring(2, 10)}...`,
+      lastUsed: 'Never'
+    }]);
+    showToast('New API key generated successfully');
+  };
+
+  const revokeKey = (id: number) => {
+    setKeys(keys.filter(k => k.id !== id));
+    showToast('API key revoked');
+  };
+
+  const toggleIntegration = (name: string) => {
+    setIntegrations(prev => {
+      const newState = !prev[name];
+      showToast(newState ? `Connected to ${name}` : `Disconnected from ${name}`);
+      return { ...prev, [name]: newState };
+    });
+  };
+
+  const toggleAlert = (name: string) => {
+    setToggles(prev => ({ ...prev, [name]: !prev[name] }));
+  };
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -16,7 +71,18 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="p-8 max-w-6xl mx-auto w-full text-slate-50 min-h-screen">
+    <div className="p-8 max-w-6xl mx-auto w-full text-slate-50 min-h-screen relative">
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-8 right-8 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-2xl font-medium text-sm flex items-center gap-2">
+            <Check size={16} />
+            {toast}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-3 mb-8">
         <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400">
           <Settings size={20} />
@@ -61,7 +127,7 @@ export default function SettingsPage() {
                     <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Demo" alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                   <div>
-                    <button className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors border border-slate-700 mb-2">
+                    <button onClick={() => showToast('Avatar updated')} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-lg transition-colors border border-slate-700 mb-2">
                       Change Avatar
                     </button>
                     <p className="text-xs text-slate-500">JPG, GIF or PNG. 1MB max.</p>
@@ -71,11 +137,11 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">First Name</label>
-                    <input type="text" defaultValue="Demo" className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                    <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300">Last Name</label>
-                    <input type="text" defaultValue="User" className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
+                    <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} className="w-full px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50" />
                   </div>
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium text-slate-300">Email Address</label>
@@ -85,7 +151,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-8 flex justify-end">
-                  <button className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/20">
+                  <button onClick={() => showToast('Profile settings saved successfully')} className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-all shadow-lg shadow-indigo-500/20">
                     Save Changes
                   </button>
                 </div>
@@ -98,13 +164,13 @@ export default function SettingsPage() {
               <h2 className="text-lg font-semibold text-white mb-6">Theme Preferences</h2>
               <p className="text-slate-400 mb-6">Customize the look and feel of your dashboard.</p>
               <div className="grid grid-cols-3 gap-4">
-                <div className="p-4 border-2 border-indigo-500 bg-slate-950 rounded-xl flex items-center justify-center cursor-pointer">
+                <div onClick={() => setTheme('dark')} className={`p-4 border-2 ${theme === 'dark' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all`}>
                   <span className="text-sm font-medium text-white">Dark (Default)</span>
                 </div>
-                <div className="p-4 border-2 border-slate-800 hover:border-slate-700 bg-slate-900 rounded-xl flex items-center justify-center cursor-pointer opacity-50">
+                <div onClick={() => { setTheme('light'); showToast('Light mode coming soon'); }} className={`p-4 border-2 ${theme === 'light' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all opacity-50`}>
                   <span className="text-sm font-medium text-slate-400">Light (Coming Soon)</span>
                 </div>
-                <div className="p-4 border-2 border-slate-800 hover:border-slate-700 bg-slate-900 rounded-xl flex items-center justify-center cursor-pointer opacity-50">
+                <div onClick={() => { setTheme('system'); showToast('System theme synced'); }} className={`p-4 border-2 ${theme === 'system' ? 'border-indigo-500 bg-slate-950' : 'border-slate-800 bg-slate-900'} rounded-xl flex items-center justify-center cursor-pointer transition-all`}>
                   <span className="text-sm font-medium text-slate-400">System</span>
                 </div>
               </div>
@@ -116,14 +182,17 @@ export default function SettingsPage() {
               <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
                 <h2 className="text-lg font-semibold text-white mb-6">Alert Routing & Webhooks</h2>
                 <div className="space-y-4">
-                  {['Incident Creation (P1/P2)', 'Deployment Success', 'High CPU Utilization (>90%)', 'DevQL Syntax Errors'].map((alert) => (
+                  {Object.entries(toggles).map(([alert, isEnabled]) => (
                     <div key={alert} className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl">
                       <div>
                         <p className="text-sm font-medium text-slate-200">{alert}</p>
                         <p className="text-xs text-slate-500 mt-1">Route to configured Slack channels.</p>
                       </div>
-                      <button className="w-11 h-6 bg-indigo-600 rounded-full flex items-center p-1 cursor-pointer transition-colors">
-                        <div className="w-4 h-4 bg-white rounded-full shadow-md transform translate-x-5 transition-transform" />
+                      <button 
+                        onClick={() => toggleAlert(alert)}
+                        className={`w-11 h-6 rounded-full flex items-center p-1 cursor-pointer transition-colors ${isEnabled ? 'bg-indigo-600' : 'bg-slate-700'}`}
+                      >
+                        <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${isEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
                       </button>
                     </div>
                   ))}
@@ -136,13 +205,21 @@ export default function SettingsPage() {
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
                 <h2 className="text-lg font-semibold text-white mb-6">Security & Authentication</h2>
-                <div className="p-4 border-2 border-emerald-500/30 bg-emerald-500/10 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className={`p-4 border-2 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-colors ${twoFactor ? 'border-emerald-500/30 bg-emerald-500/10' : 'border-rose-500/30 bg-rose-500/10'}`}>
                   <div>
-                    <h3 className="text-sm font-bold text-emerald-400">Two-Factor Authentication (2FA)</h3>
-                    <p className="text-xs text-emerald-500/70 mt-1">Your account is highly secure. Authenticator App is enabled.</p>
+                    <h3 className={`text-sm font-bold ${twoFactor ? 'text-emerald-400' : 'text-rose-400'}`}>Two-Factor Authentication (2FA)</h3>
+                    <p className={`text-xs mt-1 ${twoFactor ? 'text-emerald-500/70' : 'text-rose-500/70'}`}>
+                      {twoFactor ? 'Your account is highly secure. Authenticator App is enabled.' : 'Your account is currently at risk. Enable 2FA.'}
+                    </p>
                   </div>
-                  <button className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-sm font-medium border border-emerald-500/30 rounded-lg transition-colors">
-                    Manage 2FA
+                  <button 
+                    onClick={() => {
+                      setTwoFactor(!twoFactor);
+                      showToast(twoFactor ? '2FA Disabled' : '2FA Enabled successfully');
+                    }}
+                    className={`px-4 py-2 text-sm font-medium border rounded-lg transition-colors ${twoFactor ? 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border-rose-500/30'}`}
+                  >
+                    {twoFactor ? 'Disable 2FA' : 'Enable 2FA'}
                   </button>
                 </div>
                 
@@ -163,7 +240,7 @@ export default function SettingsPage() {
               <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-semibold text-white">DevBoard API Keys</h2>
-                  <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-indigo-500/20 transition-all">
+                  <button onClick={generateKey} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-indigo-500/20 transition-all">
                     Generate New Key
                   </button>
                 </div>
@@ -178,14 +255,21 @@ export default function SettingsPage() {
                       </tr>
                     </thead>
                     <tbody className="text-sm">
-                      <tr className="border-b border-slate-800/50">
-                        <td className="py-4 font-medium text-slate-300">Production CI/CD</td>
-                        <td className="py-4 font-mono text-slate-500">devboard_prod_8f92...</td>
-                        <td className="py-4 text-slate-500">2 minutes ago</td>
-                        <td className="py-4 text-right">
-                          <button className="text-rose-400 hover:text-rose-300 text-xs font-semibold">Revoke</button>
-                        </td>
-                      </tr>
+                      {keys.map((key) => (
+                        <tr key={key.id} className="border-b border-slate-800/50 animate-in fade-in duration-300">
+                          <td className="py-4 font-medium text-slate-300">{key.name}</td>
+                          <td className="py-4 font-mono text-slate-500">{key.token}</td>
+                          <td className="py-4 text-slate-500">{key.lastUsed}</td>
+                          <td className="py-4 text-right">
+                            <button onClick={() => revokeKey(key.id)} className="text-rose-400 hover:text-rose-300 text-xs font-semibold">Revoke</button>
+                          </td>
+                        </tr>
+                      ))}
+                      {keys.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="py-8 text-center text-slate-500 text-xs">No active API keys found.</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -199,22 +283,28 @@ export default function SettingsPage() {
                 <h2 className="text-lg font-semibold text-white mb-6">External Integrations</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
-                    { name: 'GitHub Enterprise', status: 'Connected', desc: 'Sync PR metrics and commits.', color: 'text-slate-200', bg: 'bg-slate-800' },
-                    { name: 'Slack', status: 'Connect', desc: 'Route alerts to #incidents.', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/30' },
-                    { name: 'Datadog', status: 'Connect', desc: 'Ingest raw metric streams.', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' }
-                  ].map((intg) => (
-                    <div key={intg.name} className={`p-5 border border-slate-800 rounded-xl flex flex-col justify-between h-32`}>
-                      <div>
-                        <h3 className={`text-sm font-bold ${intg.color}`}>{intg.name}</h3>
-                        <p className="text-xs text-slate-500 mt-1">{intg.desc}</p>
+                    { name: 'GitHub Enterprise', desc: 'Sync PR metrics and commits.', color: 'text-slate-200', activeBg: 'bg-slate-800', inactiveBg: 'bg-slate-900 border-slate-800' },
+                    { name: 'Slack', desc: 'Route alerts to #incidents.', color: 'text-sky-400', activeBg: 'bg-sky-500/20 border-sky-500/50', inactiveBg: 'bg-sky-500/5 border-sky-500/20' },
+                    { name: 'Datadog', desc: 'Ingest raw metric streams.', color: 'text-purple-400', activeBg: 'bg-purple-500/20 border-purple-500/50', inactiveBg: 'bg-purple-500/5 border-purple-500/20' }
+                  ].map((intg) => {
+                    const isConnected = integrations[intg.name];
+                    return (
+                      <div key={intg.name} className={`p-5 border rounded-xl flex flex-col justify-between h-32 transition-all ${isConnected ? intg.activeBg : intg.inactiveBg}`}>
+                        <div>
+                          <h3 className={`text-sm font-bold ${intg.color}`}>{intg.name}</h3>
+                          <p className="text-xs text-slate-500 mt-1">{intg.desc}</p>
+                        </div>
+                        <div className="flex justify-end">
+                          <button 
+                            onClick={() => toggleIntegration(intg.name)}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${isConnected ? 'bg-slate-950/50 text-slate-400 border-slate-700' : 'bg-transparent text-slate-300 border-slate-600 hover:bg-slate-800'}`}
+                          >
+                            {isConnected ? 'Connected' : 'Connect'}
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex justify-end">
-                        <button className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${intg.status === 'Connected' ? 'bg-slate-800 text-slate-400 border-slate-700' : intg.bg + ' ' + intg.color + ' hover:opacity-80'}`}>
-                          {intg.status}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
