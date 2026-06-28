@@ -20,7 +20,8 @@ export class JitCompiler {
     if (ast.condition) {
       // Security note: In a true prod JIT, we strictly validate operators to prevent injection.
       // The Lexer and Parser already guarantee that only valid operators/fields get here.
-      fnBody += `  if (row.${ast.condition.left} ${ast.condition.operator} ${ast.condition.right}) {\n`;
+      const rightVal = typeof ast.condition.right === 'string' ? `"${ast.condition.right}"` : ast.condition.right;
+      fnBody += `  if (row.${ast.condition.left} ${ast.condition.operator} ${rightVal}) {\n`;
     }
     
     // Compile the SELECT projection

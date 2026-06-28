@@ -2,6 +2,7 @@ export enum TokenType {
   KEYWORD,
   IDENTIFIER,
   NUMBER,
+  STRING,
   OPERATOR,
   COMMA,
   EOF
@@ -47,6 +48,8 @@ export class Lexer {
         tokens.push({ type: TokenType.NUMBER, value: this.readNumber() });
       } else if (/[=><!]/.test(char)) {
         tokens.push({ type: TokenType.OPERATOR, value: this.readOperator() });
+      } else if (char === '"' || char === "'") {
+        tokens.push({ type: TokenType.STRING, value: this.readString(char) });
       } else {
         throw new Error(`Syntax Error: Unexpected character '${char}' at position ${this.position}`);
       }
@@ -83,6 +86,16 @@ export class Lexer {
     while (this.position < this.input.length && /[=><!]/.test(this.input[this.position])) {
       result += this.input[this.position++];
     }
+    return result;
+  }
+
+  private readString(quoteChar: string): string {
+    let result = '';
+    this.position++; // skip opening quote
+    while (this.position < this.input.length && this.input[this.position] !== quoteChar) {
+      result += this.input[this.position++];
+    }
+    this.position++; // skip closing quote
     return result;
   }
 }

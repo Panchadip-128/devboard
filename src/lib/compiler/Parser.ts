@@ -8,7 +8,7 @@ export interface BinaryExprAST extends ASTNode {
   type: 'BinaryExpr';
   left: string;
   operator: string;
-  right: number;
+  right: number | string;
 }
 
 export interface SelectAST extends ASTNode {
@@ -54,7 +54,14 @@ export class Parser {
     if (this.match(TokenType.KEYWORD, 'WHERE')) {
       const left = this.consume(TokenType.IDENTIFIER).value;
       const operator = this.consume(TokenType.OPERATOR).value;
-      const right = parseFloat(this.consume(TokenType.NUMBER).value);
+      
+      const rightToken = this.peek();
+      let right: number | string;
+      if (rightToken.type === TokenType.NUMBER) {
+        right = parseFloat(this.consume(TokenType.NUMBER).value);
+      } else {
+        right = this.consume(TokenType.STRING).value;
+      }
       
       condition = { type: 'BinaryExpr', left, operator, right };
     }
