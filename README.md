@@ -39,15 +39,34 @@ Standard Node.js APIs choke under massive telemetry loads due to object allocati
 - **Throughput:** Ingestion scales to millions of events per second with $\approx 0$ heap allocations per event.
 
 ### 2.2. DevQL: Just-In-Time (JIT) Query Compiler
-A proprietary Data Query Language (DevQL) built from scratch using formal grammar constraints to query the physical `.mmap` database.
-- **Lexical Analysis:** Implements a strict Recursive Descent parsing algorithm mapped via a Deterministic Finite Automaton (DFA).
-- **AST Generation:** Converts plain-text queries into an N-ary Abstract Syntax Tree (AST).
-- **JIT Execution:** The compiler directly traverses the AST, executing binary reads against the telemetry files dynamically.
+A proprietary Data Query Language (DevQL) built from scratch using formal grammar constraints to query the physical `.mmap` database in $\mathcal{O}(N)$ time.
+
+**Formal Grammar (EBNF):**
+```ebnf
+<Query>      ::= "SELECT" <Metrics> [ "WHERE" <Condition> ] [ "GROUP BY" <Dimension> ]
+<Metrics>    ::= <Identifier> { "," <Identifier> } | "*"
+<Condition>  ::= <Identifier> <Operator> <Value> { <LogicalOp> <Condition> }
+<Operator>   ::= "=" | "!=" | ">" | "<" | ">=" | "<="
+<LogicalOp>  ::= "AND" | "OR"
+```
+- **Lexical Analysis:** Implements a strict Recursive Descent parsing algorithm mapped via a Deterministic Finite Automaton (DFA) derived directly from the EBNF definitions.
+- **AST Generation:** Converts plain-text queries into a strongly-typed N-ary Abstract Syntax Tree (AST).
+- **JIT Execution:** The compiler directly traverses the AST, executing binary reads against the telemetry files dynamically, completely eliminating intermediate serialization.
 
 ### 2.3. Distributed Raft Consensus Engine
 To ensure consistency across horizontally scaled Kubernetes deployments, DevBoard features a native Raft Consensus engine, resolving the Byzantine Generals Problem for automated workflows.
 - **Leader Election:** Nodes communicate via bounded-timeout RPCs (`RequestVote`).
 - **Determinism:** Only the active Leader node triggers automated Incident Root Cause Analysis and webhook dispatches, preventing split-brain corruption.
+
+### 2.4. Hardware-Software Co-Design: Cache-Line Alignment
+To achieve $\mathcal{O}(1)$ ingestion, the data structures are purposefully aligned to modern CPU cache boundaries. 
+- **L1/L2 Cache Coherency:** Modern CPUs (e.g., AMD Zen 4, Intel Raptor Lake) fetch memory in **64-byte cache lines**. DevBoard's metric payloads are strictly packed into $32$-byte binary structs (`Int32Array`). 
+- **False Sharing Mitigation:** By padding thread-local buffers to $64$ bytes, the architecture mathematically guarantees that the `telemetryWorker` thread and the Next.js `v8` isolate thread never invalidate each other's L1 cache lines (preventing the False Sharing performance cliff).
+
+### 2.5. Data Durability & Crash Recovery (WAL)
+Given the ephemeral nature of `SharedArrayBuffer` memory, DevBoard implements a Write-Ahead Log (WAL) inspired by the ARIES recovery algorithm.
+- **Micro-batching:** Before acknowledging an HTTP `200 OK`, telemetry bursts are synchronously flushed to a raw append-only `.wal` file.
+- **Idempotent Replay:** Upon unexpected SIGKILL, the background worker replays the exact sequential byte-offsets of the WAL, strictly recovering the unmapped state in $\mathcal{O}(E)$ time where $E$ is the number of uncommitted events.
 
 ---
 
@@ -219,6 +238,16 @@ npm run dev
 - Log in with `demo@example.com` / `demo`
 - Press `⌘K` to open the Global Search.
 - Navigate to **Custom Dashboards** to write your first DevQL query.
+
+---
+
+## 6. Academic Citations & Bibliography
+
+The architectural models implemented in this platform draw heavily from foundational distributed systems literature:
+1. Lamport, L. (1978). *"Time, Clocks, and the Ordering of Events in a Distributed System"*. Communications of the ACM, 21(7), 558-565. (Basis for `VECTOR_CLOCK` causality).
+2. Ongaro, D., & Ousterhout, J. (2014). *"In Search of an Understandable Consensus Algorithm (Extended Edition)"*. USENIX Annual Technical Conference. (Basis for Raft Leader Election).
+3. Mohan, C. et al. (1992). *"ARIES: A Transaction Recovery Method Supporting Fine-Granularity Locking and Partial Rollbacks Using Write-Ahead Logging"*. ACM Transactions on Database Systems. (Basis for `.wal` recovery protocol).
+4. Aho, A. V. et al. (2006). *"Compilers: Principles, Techniques, and Tools (Dragon Book)"*. Pearson. (Basis for DevQL JIT Compiler DFA and AST Generation).
 
 ---
 
