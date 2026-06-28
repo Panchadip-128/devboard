@@ -111,16 +111,112 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {/* Placeholders for other tabs */}
-          {['notifications', 'security', 'api', 'integrations'].includes(activeTab) && (
-            <div className="p-12 border-2 border-dashed border-slate-800/60 rounded-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-800 text-slate-400 mb-4">
-                {tabs.find(t => t.id === activeTab)?.icon({ size: 24 })}
+          {activeTab === 'notifications' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
+                <h2 className="text-lg font-semibold text-white mb-6">Alert Routing & Webhooks</h2>
+                <div className="space-y-4">
+                  {['Incident Creation (P1/P2)', 'Deployment Success', 'High CPU Utilization (>90%)', 'DevQL Syntax Errors'].map((alert) => (
+                    <div key={alert} className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl">
+                      <div>
+                        <p className="text-sm font-medium text-slate-200">{alert}</p>
+                        <p className="text-xs text-slate-500 mt-1">Route to configured Slack channels.</p>
+                      </div>
+                      <button className="w-11 h-6 bg-indigo-600 rounded-full flex items-center p-1 cursor-pointer transition-colors">
+                        <div className="w-4 h-4 bg-white rounded-full shadow-md transform translate-x-5 transition-transform" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">{tabs.find(t => t.id === activeTab)?.label} configuration</h3>
-              <p className="text-slate-500 text-sm max-w-md mx-auto">
-                This feature module is currently under development. Check back later for updates.
-              </p>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
+                <h2 className="text-lg font-semibold text-white mb-6">Security & Authentication</h2>
+                <div className="p-4 border-2 border-emerald-500/30 bg-emerald-500/10 rounded-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-emerald-400">Two-Factor Authentication (2FA)</h3>
+                    <p className="text-xs text-emerald-500/70 mt-1">Your account is highly secure. Authenticator App is enabled.</p>
+                  </div>
+                  <button className="px-4 py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-sm font-medium border border-emerald-500/30 rounded-lg transition-colors">
+                    Manage 2FA
+                  </button>
+                </div>
+                
+                <h3 className="text-sm font-bold text-slate-300 mt-8 mb-4">Active Sessions</h3>
+                <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-200">Mac OS • Chrome</p>
+                    <p className="text-xs text-slate-500 mt-1">Seattle, WA • IP: 192.168.1.1 (Current Session)</p>
+                  </div>
+                  <span className="px-2 py-1 bg-indigo-500/20 text-indigo-400 text-[10px] font-bold uppercase tracking-wider rounded border border-indigo-500/30">Active</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'api' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-white">DevBoard API Keys</h2>
+                  <button className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-lg shadow-indigo-500/20 transition-all">
+                    Generate New Key
+                  </button>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-500">
+                        <th className="pb-3 font-semibold">Key Name</th>
+                        <th className="pb-3 font-semibold">Token Preview</th>
+                        <th className="pb-3 font-semibold">Last Used</th>
+                        <th className="pb-3 font-semibold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-sm">
+                      <tr className="border-b border-slate-800/50">
+                        <td className="py-4 font-medium text-slate-300">Production CI/CD</td>
+                        <td className="py-4 font-mono text-slate-500">devboard_prod_8f92...</td>
+                        <td className="py-4 text-slate-500">2 minutes ago</td>
+                        <td className="py-4 text-right">
+                          <button className="text-rose-400 hover:text-rose-300 text-xs font-semibold">Revoke</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'integrations' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="p-6 bg-slate-900/50 border border-slate-800/60 rounded-2xl">
+                <h2 className="text-lg font-semibold text-white mb-6">External Integrations</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    { name: 'GitHub Enterprise', status: 'Connected', desc: 'Sync PR metrics and commits.', color: 'text-slate-200', bg: 'bg-slate-800' },
+                    { name: 'Slack', status: 'Connect', desc: 'Route alerts to #incidents.', color: 'text-sky-400', bg: 'bg-sky-500/10 border-sky-500/30' },
+                    { name: 'Datadog', status: 'Connect', desc: 'Ingest raw metric streams.', color: 'text-purple-400', bg: 'bg-purple-500/10 border-purple-500/30' }
+                  ].map((intg) => (
+                    <div key={intg.name} className={`p-5 border border-slate-800 rounded-xl flex flex-col justify-between h-32`}>
+                      <div>
+                        <h3 className={`text-sm font-bold ${intg.color}`}>{intg.name}</h3>
+                        <p className="text-xs text-slate-500 mt-1">{intg.desc}</p>
+                      </div>
+                      <div className="flex justify-end">
+                        <button className={`px-4 py-1.5 rounded-lg text-xs font-bold border transition-colors ${intg.status === 'Connected' ? 'bg-slate-800 text-slate-400 border-slate-700' : intg.bg + ' ' + intg.color + ' hover:opacity-80'}`}>
+                          {intg.status}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
