@@ -108,7 +108,8 @@ stateDiagram-v2
     Mmap_Disk --> Recharts_JSON: Transformation
     Recharts_JSON --> [*]: Client Render
 ```
-**Purpose & Solution:** Maps the transformation of a raw DevQL string into execution blocks. This proves the system avoids monolithic SQL overhead by implementing an isolated, strict $O(N)$ parser that compiles directly down to memory mapped file reads, guaranteeing deterministic execution times.
+**Algorithmic Methodology & Resolution:** 
+This state machine maps the exact transformation of a raw query string into a memory-bound execution trace. Traditional dashboards rely on ORM layers (like Prisma or TypeORM) which parse strings into SQL, inherently bottlenecking performance at the database network layer. This diagram proves that DevBoard bypasses this constraint entirely. By implementing an isolated, strict $O(N)$ Lexical Analyzer that feeds a Recursive Descent parser, the generated Abstract Syntax Tree (AST) compiles directly down into OS-level physical memory reads (`Mmap_Disk`). This guarantees theoretically deterministic execution bounds, completely solving the traditional $N+1$ query latency problem inherent to relational databases.
 
 ### B. Distributed Raft Consensus Sequence
 This demonstrates how DevBoard synchronizes state across horizontal multi-tenant environments.
@@ -131,7 +132,8 @@ sequenceDiagram
     NodeB->>NodeA: RPC: AppendEntries (Heartbeat)
     NodeB->>NodeC: RPC: AppendEntries (Heartbeat)
 ```
-**Purpose & Solution:** Details the network RPC flow during a leader election. It solves the critical "Split-Brain" problem in distributed systems—ensuring that even if deployed across 50 Kubernetes pods, exactly *one* node triggers chron jobs and webhooks without double-firing.
+**Byzantine Fault Tolerance & Consensus Resolution:** 
+This sequence diagram details the strict network RPC flow utilized to achieve distributed state quorum. In horizontally scaled microservice environments (e.g., Kubernetes), running automated cron-jobs or webhook dispatches on multiple identical pods inevitably triggers race conditions, known as the "Split-Brain" problem. DevBoard resolves this mathematically via the Raft protocol. When a Node becomes a Candidate, it asserts dominance via a randomized timeout ($T_e$). By mandating that a strict quorum ($> 50\%$) of nodes acknowledge the `RequestVote` RPC before any action is taken, the system guarantees that only one deterministic Leader ever executes automated workflows. This entirely eliminates the risk of duplicate webhooks or double-firing infrastructure alerts.
 
 ### C. Incident & Telemetry Entity-Relationship (Wireframe)
 Database relations used for predicting burnout and tracking developer velocity.
@@ -156,7 +158,8 @@ erDiagram
         int logical_time
     }
 ```
-**Purpose & Solution:** Illustrates the data wireframe connecting raw infrastructure events to developer incidents. By embedding `VECTOR_CLOCK` logical timestamps into incidents, the system solves causality race conditions, guaranteeing that incident resolutions are processed in the exact order they occurred regardless of network latency.
+**Causal Dependency Resolution & Relational Schematics:** 
+This Entity-Relationship wireframe illustrates the mapping between extremely high-frequency infrastructure metrics (Telemetry Events) and human-centric anomalies (Incidents). Because telemetry streams in at millions of events per second across distributed nodes, standard relational timestamps are highly susceptible to NTP server drift, creating impossible causality loops where the "fix" timestamp appears before the "error" timestamp. This wireframe demonstrates how DevBoard solves this by embedding `VECTOR_CLOCK` logical timestamps (Lamport Causality) directly into the Incident schema. This guarantees that all automated Root Cause Analysis (RCA) operations analyze the exact topological ordering of events, strictly preserving true chronological dependency regardless of network latency or hardware clock drift.
 
 ---
 
