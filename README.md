@@ -83,12 +83,13 @@ graph TD
     end
 
     %% Flow
-    Frontend -- HTTP POST Query --> Lexer
-    Backend -- Int32Array Atomics --> SAB
-    SAB -- Lock-Free Drain --> Worker
-    Worker -- OS File Write --> Mmap
-    Compiler -- Read Bytes --> Mmap
-    Raft -- RPC Election --> Network Peers
+    Frontend -- "HTTP POST Query" --> Lexer
+    Backend -- "Int32Array Atomics" --> SAB
+    SAB -- "Lock-Free Drain" --> Worker
+    Worker -- "OS File Write" --> Mmap
+    Compiler -- "Read Bytes" --> Mmap
+    NP[Network Peers]
+    Raft -- "RPC Election" --> NP
 ```
 
 ---
@@ -116,13 +117,28 @@ This guarantees total causal ordering in $\mathcal{O}(K)$ time where $K$ is the 
 
 ---
 
-## 📸 Platform Gallery
+## 📸 Platform Gallery (Complete Coverage)
 
 <div align="center">
-  <img src="public/screenshots/screenshot-05.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Dashboard" />
-  <img src="public/screenshots/screenshot-12.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="DevQL Studio" />
-  <img src="public/screenshots/screenshot-18.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Custom Dashboards" />
-  <img src="public/screenshots/screenshot-24.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Command Palette" />
+  <h3>Authentication & Navigation</h3>
+  <img src="public/screenshots/screenshot-01.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Login Flow" />
+  <img src="public/screenshots/screenshot-04.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Main Dashboard Navigation" />
+  
+  <h3>Enterprise Global Search (⌘K)</h3>
+  <img src="public/screenshots/screenshot-07.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Command Palette Activation" />
+  <img src="public/screenshots/screenshot-09.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Cross-Module Searching" />
+
+  <h3>DevQL JIT Compiler & Studio</h3>
+  <img src="public/screenshots/screenshot-11.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="DevQL Studio IDE" />
+  <img src="public/screenshots/screenshot-13.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="AST Generation & Execution" />
+
+  <h3>Custom Dashboard Builder</h3>
+  <img src="public/screenshots/screenshot-15.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Empty Widget Grid" />
+  <img src="public/screenshots/screenshot-18.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="DevQL Chart Rendering" />
+
+  <h3>Incident & Team Analytics</h3>
+  <img src="public/screenshots/screenshot-20.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Incident RCA" />
+  <img src="public/screenshots/screenshot-25.png" width="48%" style="border-radius: 8px; margin: 1%;" alt="Team Contributor Metrics" />
 </div>
 
 ---
