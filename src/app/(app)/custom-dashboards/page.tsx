@@ -65,10 +65,14 @@ export default function CustomDashboardsPage() {
       }
 
       // Format data for Recharts (assuming DevQL returns an array of objects)
-      const chartData = data.result.map((row: any, i: number) => ({
-        name: `T-${data.result.length - i}`,
-        value: row.val || Math.floor(Math.random() * 100) // Fallback for mockup if DevQL returns flat data
-      }));
+      // Limit to 50 points so the chart isn't overcrowded
+      const chartData = data.results.slice(0, 50).map((row: any, i: number) => {
+        const val = Object.values(row)[0] as number;
+        return {
+          name: `T-${50 - i}`,
+          value: val || 0
+        };
+      });
 
       updateWidget(id, 'data', chartData);
     } catch (e: any) {

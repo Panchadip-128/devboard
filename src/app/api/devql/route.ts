@@ -27,8 +27,9 @@ export async function POST(req: NextRequest) {
     const rawData = Array.from({ length: 1000 }, (_, i) => ({
       id: `mmap_idx_${i}`,
       riskScore: Math.floor(Math.random() * 100),
-      cpuUsage: Math.floor(Math.random() * 100),
-      service: i % 2 === 0 ? "auth-service" : "api-gateway",
+      cpu_usage: Math.floor(Math.random() * 100),
+      memory_mb: Math.floor(Math.random() * 1024),
+      service: i % 2 === 0 ? "db" : "api",
       timestamp: Date.now() - (i * 1000)
     }));
 
