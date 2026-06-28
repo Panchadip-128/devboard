@@ -15,12 +15,12 @@
 
 ---
 
-## 📖 Overview
+## Overview
 **DevBoard** is not a standard CRUD dashboard. It is a Principal-level distributed systems engineering project designed to handle massive-scale telemetry. By utilizing High-Frequency Trading (HFT) memory techniques, scratch-built compiler design (DevQL), and mathematical causality algorithms, DevBoard provides real-time infrastructure observability with sub-millisecond latency and zero garbage collection overhead.
 
 ---
 
-## ⚡ Core Architecture
+## Core Architecture
 
 ### 1. Lock-Free Telemetry Pipeline (Zero Allocation)
 Traditional Node.js APIs choke under massive telemetry loads due to V8 Garbage Collection (GC) pauses. DevBoard bypasses V8 entirely using OS-level file mapping and thread atomics.
@@ -42,7 +42,7 @@ To run DevBoard horizontally across multiple Kubernetes pods without split-brain
 
 ---
 
-## 📊 Feature Matrix
+## Feature Matrix
 
 | Feature | Traditional Approach (Datadog/NewRelic) | DevBoard Engineering Solution | Impact |
 |---------|-----------------------------------------|-------------------------------|--------|
@@ -54,7 +54,7 @@ To run DevBoard horizontally across multiple Kubernetes pods without split-brain
 
 ---
 
-## 📐 System Architecture (Mermaid)
+## System Architecture (Mermaid)
 
 ```mermaid
 graph TD
@@ -94,7 +94,7 @@ graph TD
 
 ---
 
-## 🔬 Advanced Statistical Modeling & System Limits
+## Advanced Statistical Modeling & System Limits
 
 This platform is engineered using deterministic mathematical constraints to guarantee performance under High-Frequency Telemetry loads.
 
@@ -111,7 +111,7 @@ Where $\Delta t_{RPC}$ is network latency and $N$ is the number of election cycl
 
 ---
 
-## 🧮 Multi-Agent Architecture & State Machines (Mermaid)
+## Multi-Agent Architecture & State Machines (Mermaid)
 
 ### A. DevQL AST Compilation Pipeline
 A scratch-built $O(N)$ JIT Compiler architecture that guarantees optimal query routing without SQL overhead.
@@ -184,7 +184,7 @@ erDiagram
 
 ---
 
-## 📸 Platform Gallery (Complete Coverage)
+## Platform Gallery (Complete Coverage)
 
 <div align="center">
   <h3>Authentication & Navigation</h3>
@@ -215,7 +215,7 @@ erDiagram
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 1. **Clone & Install**
 ```bash
@@ -243,5 +243,5 @@ npm run dev
 
 ---
 
-## 📜 License
+## License
 MIT License. Built for rigorous technical analysis and distributed systems engineering.
