@@ -1,0 +1,17 @@
+{
+  "firstName": "Demo",
+  "lastName": "User",
+  "theme": "dark",
+  "twoFactor": true,
+  "toggles": {
+    "Incident Creation (P1/P2)": true,
+    "Deployment Success": false,
+    "High CPU Utilization (>90%)": true,
+    "DevQL Syntax Errors": false
+  },
+  "integrations": {
+    "GitHub Enterprise": true,
+    "Slack": false,
+    "Datadog": false
+  }
+}

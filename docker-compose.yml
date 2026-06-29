@@ -26,10 +26,12 @@ services:
       dockerfile: Dockerfile
     container_name: devboard-app
     ports:
-      - "3000:3000"
+      - "3005:3000"
     environment:
       - DATABASE_URL=postgresql://user:password@postgres:5432/devboard?schema=public
       - NODE_ENV=production
+      - NEXTAUTH_SECRET=super_secret_key_for_production
+      - NEXTAUTH_URL=http://localhost:3005
     depends_on:
       postgres:
         condition: service_healthy

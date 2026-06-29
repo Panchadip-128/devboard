@@ -7,7 +7,7 @@ RUN apk add --no-cache openssl python3 make g++
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # 2. Rebuild the source code
 FROM base AS builder

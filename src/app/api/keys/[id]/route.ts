@@ -5,12 +5,13 @@ import path from 'path';
 const DATA_DIR = path.join(process.cwd(), '.data');
 const KEYS_FILE = path.join(DATA_DIR, 'keys.json');
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const data = await fs.readFile(KEYS_FILE, 'utf-8');
     let keys = JSON.parse(data);
 
-    const filtered = keys.filter((k: any) => k.id !== params.id);
+    const filtered = keys.filter((k: any) => k.id !== id);
     await fs.writeFile(KEYS_FILE, JSON.stringify(filtered, null, 2));
 
     return NextResponse.json({ success: true });
